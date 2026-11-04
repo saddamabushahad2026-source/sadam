@@ -56,7 +56,6 @@
             border-radius: 10px;
         }
 
-        /* حركة الشريط المتحرك من اليسار لليمين */
         @keyframes marquee {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
@@ -90,6 +89,30 @@
 </head>
 <body class="bg-[#121212] text-gray-200 min-h-screen antialiased">
     <div id="root"></div>
+
+    <!-- Firebase SDK Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBukOKBEbjkfdmG311eNmlCF4ig4pkE__4",
+            authDomain: "sadam-e29be.firebaseapp.com",
+            databaseURL: "https://sadam-e29be-default-rtdb.firebaseio.com",
+            projectId: "sadam-e29be",
+            storageBucket: "sadam-e29be.firebasestorage.app",
+            messagingSenderId: "316023282326",
+            appId: "1:316023282326:web:550517a4575d4755af80b7",
+            measurementId: "G-DM0YFBMWT9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+        
+        window.firebaseDB = { db, ref, set, onValue };
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
