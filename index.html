@@ -92,9 +92,9 @@
 
     <!-- Firebase SDK Scripts -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBukOKBEbjkfdmG311eNmlCF4ig4pkE__4",
@@ -1449,7 +1449,7 @@
                                 </div>
                                 <div>
                                     <label className="block font-extrabold text-cyan-400 mb-1">سعر المعمل</label>
-                                    <input type="number" value= {factoryPrice} onChange={e => setFactoryPrice(e.target.value)} className="w-full px-3 py-2.5 bg-[#252525] border border-[#333] rounded-xl text-cyan-300 font-bold" />
+                                    <input type="number" value={factoryPrice} onChange={e => setFactoryPrice(e.target.value)} className="w-full px-3 py-2.5 bg-[#252525] border border-[#333] rounded-xl text-cyan-300 font-bold" />
                                 </div>
                                 <div>
                                     <label className="block font-extrabold text-pink-400 mb-1">سعر المفرد</label>
