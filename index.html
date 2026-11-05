@@ -21,7 +21,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
-        import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBukOKBEbjkfdmG311eNmlCF4ig4pkE__4",
@@ -38,7 +38,7 @@
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
-        window.firebaseDB = { db, ref, set, onValue, push };
+        window.firebaseDB = { db, ref, set, onValue, push, remove };
     </script>
 
     <script>
@@ -123,21 +123,21 @@
             return '629' + Math.floor(100000000 + Math.random() * 900000000).toString();
         };
 
-        const INITIAL_CATEGORIES = [
-            { id: 'oriental', name: 'حلويات شرقية', icon: 'fa-stroopwafel', color: '#EC4899', type: 'weight' },
-            { id: 'pastry', name: 'معجنات وفطاير', icon: 'fa-bread-slice', color: '#F59E0B', type: 'weight' },
-            { id: 'cakes', name: 'كيك المناسبات', icon: 'fa-cake-candles', color: '#A855F7', type: 'piece' },
-            { id: 'icecream', name: 'آيس كريم وجيلاتو', icon: 'fa-ice-cream', color: '#06B6D4', type: 'weight' },
-            { id: 'juices', name: 'مرطبات وعصائر', icon: 'fa-glass-water-droplet', color: '#10B981', type: 'piece' },
-            { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: 'fa-mug-hot', color: '#D97706', type: 'piece' }
-        ];
+        const INITIAL_CATEGORIES_OBJ = {
+            'oriental': { id: 'oriental', name: 'حلويات شرقية', icon: 'fa-stroopwafel', color: '#EC4899', type: 'weight' },
+            'pastry': { id: 'pastry', name: 'معجنات وفطاير', icon: 'fa-bread-slice', color: '#F59E0B', type: 'weight' },
+            'cakes': { id: 'cakes', name: 'كيك المناسبات', icon: 'fa-cake-candles', color: '#A855F7', type: 'piece' },
+            'icecream': { id: 'icecream', name: 'آيس كريم وجيلاتو', icon: 'fa-ice-cream', color: '#06B6D4', type: 'weight' },
+            'juices': { id: 'juices', name: 'مرطبات وعصائر', icon: 'fa-glass-water-droplet', color: '#10B981', type: 'piece' },
+            'hot_drinks': { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: 'fa-mug-hot', color: '#D97706', type: 'piece' }
+        };
 
-        const INITIAL_PRODUCTS = [
-            { id: 1, barcode: '629100000001', name: 'كنافة بالنابلسية الفاخرة', price: 15000, factoryPrice: 11000, costPrice: 9000, category: 'oriental', image: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?w=300&auto=format&fit=crop&q=80', stock: 50 },
-            { id: 2, barcode: '629100000002', name: 'بقلاوة بالفستق الحلبي', price: 20000, factoryPrice: 15000, costPrice: 13000, category: 'oriental', image: 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=300&auto=format&fit=crop&q=80', stock: 40 },
-            { id: 3, barcode: '629100000003', name: 'معجنات جبنة وسبانخ مشكلة', price: 10000, factoryPrice: 7500, costPrice: 5500, category: 'pastry', image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=300&auto=format&fit=crop&q=80', stock: 60 },
-            { id: 4, barcode: '629100000004', name: 'قطعة كيك شوكولاتة فاخرة', price: 3500, factoryPrice: 2500, costPrice: 1800, category: 'cakes', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&auto=format&fit=crop&q=80', stock: 25 }
-        ];
+        const INITIAL_PRODUCTS_OBJ = {
+            1: { id: 1, barcode: '629100000001', name: 'كنافة بالنابلسية الفاخرة', price: 15000, factoryPrice: 11000, costPrice: 9000, category: 'oriental', image: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?w=300&auto=format&fit=crop&q=80', stock: 50 },
+            2: { id: 2, barcode: '629100000002', name: 'بقلاوة بالفستق الحلبي', price: 20000, factoryPrice: 15000, costPrice: 13000, category: 'oriental', image: 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=300&auto=format&fit=crop&q=80', stock: 40 },
+            3: { id: 3, barcode: '629100000003', name: 'معجنات جبنة وسبانخ مشكلة', price: 10000, factoryPrice: 7500, costPrice: 5500, category: 'pastry', image: 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=300&auto=format&fit=crop&q=80', stock: 60 },
+            4: { id: 4, barcode: '629100000004', name: 'قطعة كيك شوكولاتة فاخرة', price: 3500, factoryPrice: 2500, costPrice: 1800, category: 'cakes', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&auto=format&fit=crop&q=80', stock: 25 }
+        };
 
         function App() {
             const [activeTab, setActiveTab] = useState('pos');
@@ -147,8 +147,8 @@
             const [enteredPin, setEnteredPin] = useState('');
             const [pinError, setPinError] = useState(false);
 
-            const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-            const [products, setProducts] = useState(INITIAL_PRODUCTS);
+            const [categories, setCategories] = useState(Object.values(INITIAL_CATEGORIES_OBJ));
+            const [products, setProducts] = useState(Object.values(INITIAL_PRODUCTS_OBJ));
             const [orders, setOrders] = useState([]);
             const [factorySales, setFactorySales] = useState([]);
             const [expenses, setExpenses] = useState([]);
@@ -180,7 +180,7 @@
             const [editingCategory, setEditingCategory] = useState(null);
             const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
 
-            // ربط جلب البيانات من Firebase Realtime Database
+            // ربط جلب البيانات من Firebase Realtime Database مع تنقية البيانات التالفة
             useEffect(() => {
                 if (window.firebaseDB) {
                     const { db, ref, onValue, set } = window.firebaseDB;
@@ -188,39 +188,41 @@
                     onValue(ref(db, 'products'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
-                            setProducts(Object.values(data));
+                            const validProducts = Object.values(data).filter(p => p && p.id && p.name);
+                            setProducts(validProducts);
                         } else {
-                            set(ref(db, 'products'), INITIAL_PRODUCTS);
+                            set(ref(db, 'products'), INITIAL_PRODUCTS_OBJ);
                         }
                     });
 
                     onValue(ref(db, 'categories'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
-                            setCategories(Object.values(data));
+                            const validCategories = Object.values(data).filter(c => c && c.id && c.name);
+                            setCategories(validCategories);
                         } else {
-                            set(ref(db, 'categories'), INITIAL_CATEGORIES);
+                            set(ref(db, 'categories'), INITIAL_CATEGORIES_OBJ);
                         }
                     });
 
                     onValue(ref(db, 'orders'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
-                            setOrders(Object.values(data).reverse());
+                            setOrders(Object.values(data).filter(Boolean).reverse());
                         }
                     });
 
                     onValue(ref(db, 'factorySales'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
-                            setFactorySales(Object.values(data).reverse());
+                            setFactorySales(Object.values(data).filter(Boolean).reverse());
                         }
                     });
 
                     onValue(ref(db, 'expenses'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
-                            setExpenses(Object.values(data).reverse());
+                            setExpenses(Object.values(data).filter(Boolean).reverse());
                         }
                     });
                 }
@@ -390,7 +392,6 @@
                     isDebt: false
                 };
 
-                // خصم المخزون وتحديث المنتجات في Firebase
                 const updatedProducts = products.map(prod => {
                     const matchedItems = cart.filter(c => c.id === prod.id);
                     if (matchedItems.length > 0) {
@@ -493,8 +494,8 @@
             const handleDeleteExpense = (id) => {
                 if (confirm('هل تريد حذف هذه الصرفية؟')) {
                     if (window.firebaseDB) {
-                        const { db, ref, set } = window.firebaseDB;
-                        set(ref(db, `expenses/${id}`), null);
+                        const { db, ref, remove } = window.firebaseDB;
+                        remove(ref(db, `expenses/${id}`));
                     }
                 }
             };
@@ -519,8 +520,8 @@
                 }
                 if (confirm('هل أنت متأكد من الحذف؟')) {
                     if (window.firebaseDB) {
-                        const { db, ref, set } = window.firebaseDB;
-                        set(ref(db, `categories/${catId}`), null);
+                        const { db, ref, remove } = window.firebaseDB;
+                        remove(ref(db, `categories/${catId}`));
                     }
                 }
             };
@@ -539,10 +540,16 @@
             };
 
             const handleDeleteProduct = (id) => {
-                if (confirm('هل تريد حذف هذا المنتج؟')) {
+                if (confirm('هل تريد حذف هذا المنتج نهائياً؟')) {
                     if (window.firebaseDB) {
-                        const { db, ref, set } = window.firebaseDB;
-                        set(ref(db, `products/${id}`), null);
+                        const { db, ref, remove } = window.firebaseDB;
+                        remove(ref(db, `products/${id}`)).then(() => {
+                            setProducts(prev => prev.filter(p => p.id !== id));
+                        }).catch((err) => {
+                            alert('حدث خطأ أثناء الحذف: ' + err.message);
+                        });
+                    } else {
+                        setProducts(prev => prev.filter(p => p.id !== id));
                     }
                 }
             };
