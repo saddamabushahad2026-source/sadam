@@ -17,7 +17,7 @@
     <!-- QRCode.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <!-- ربط كود Firebase الموثق والمضاف حديثاً -->
+    <!-- ربط كود Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
@@ -34,12 +34,10 @@
             measurementId: "G-DM0YFBMWT9"
         };
 
-        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
-        // ربطها بنافذة المتصفح العامة (Window) لكي تستخدمها مكونات React بسهولة
         window.firebaseDB = { db, ref, set, onValue, push };
     </script>
 
@@ -149,46 +147,11 @@
             const [enteredPin, setEnteredPin] = useState('');
             const [pinError, setPinError] = useState(false);
 
-            const [categories, setCategories] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('shahd_categories_v21');
-                    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-                } catch (e) {
-                    return INITIAL_CATEGORIES;
-                }
-            });
-            const [products, setProducts] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('shahd_products_v21');
-                    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-                } catch (e) {
-                    return INITIAL_PRODUCTS;
-                }
-            });
-            const [orders, setOrders] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('shahd_orders_v21');
-                    return saved ? JSON.parse(saved) : [];
-                } catch (e) {
-                    return [];
-                }
-            });
-            const [factorySales, setFactorySales] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('shahd_factory_sales_v21');
-                    return saved ? JSON.parse(saved) : [];
-                } catch (e) {
-                    return [];
-                }
-            });
-            const [expenses, setExpenses] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('shahd_expenses_v21');
-                    return saved ? JSON.parse(saved) : [];
-                } catch (e) {
-                    return [];
-                }
-            });
+            const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+            const [products, setProducts] = useState(INITIAL_PRODUCTS);
+            const [orders, setOrders] = useState([]);
+            const [factorySales, setFactorySales] = useState([]);
+            const [expenses, setExpenses] = useState([]);
 
             const [selectedCategory, setSelectedCategory] = useState('all');
             const [searchQuery, setSearchQuery] = useState('');
@@ -217,21 +180,51 @@
             const [editingCategory, setEditingCategory] = useState(null);
             const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
 
+            // ربط جلب البيانات من Firebase Realtime Database
             useEffect(() => {
-                try { localStorage.setItem('shahd_categories_v21', JSON.stringify(categories)); } catch(e){}
-            }, [categories]);
-            useEffect(() => {
-                try { localStorage.setItem('shahd_products_v21', JSON.stringify(products)); } catch(e){}
-            }, [products]);
-            useEffect(() => {
-                try { localStorage.setItem('shahd_orders_v21', JSON.stringify(orders)); } catch(e){}
-            }, [orders]);
-            useEffect(() => {
-                try { localStorage.setItem('shahd_factory_sales_v21', JSON.stringify(factorySales)); } catch(e){}
-            }, [factorySales]);
-            useEffect(() => {
-                try { localStorage.setItem('shahd_expenses_v21', JSON.stringify(expenses)); } catch(e){}
-            }, [expenses]);
+                if (window.firebaseDB) {
+                    const { db, ref, onValue, set } = window.firebaseDB;
+
+                    onValue(ref(db, 'products'), (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setProducts(Object.values(data));
+                        } else {
+                            set(ref(db, 'products'), INITIAL_PRODUCTS);
+                        }
+                    });
+
+                    onValue(ref(db, 'categories'), (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setCategories(Object.values(data));
+                        } else {
+                            set(ref(db, 'categories'), INITIAL_CATEGORIES);
+                        }
+                    });
+
+                    onValue(ref(db, 'orders'), (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setOrders(Object.values(data).reverse());
+                        }
+                    });
+
+                    onValue(ref(db, 'factorySales'), (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setFactorySales(Object.values(data).reverse());
+                        }
+                    });
+
+                    onValue(ref(db, 'expenses'), (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            setExpenses(Object.values(data).reverse());
+                        }
+                    });
+                }
+            }, []);
 
             const handleTabChangeRequest = (tabName) => {
                 if (tabName === 'pos' || tabName === 'factory' || tabName === 'expenses') {
@@ -397,16 +390,24 @@
                     isDebt: false
                 };
 
-                setProducts(prev => prev.map(prod => {
+                // خصم المخزون وتحديث المنتجات في Firebase
+                const updatedProducts = products.map(prod => {
                     const matchedItems = cart.filter(c => c.id === prod.id);
                     if (matchedItems.length > 0) {
                         const totalDeducted = matchedItems.reduce((acc, ci) => acc + (ci.modalType === 'weight' ? ci.weight * ci.quantity : ci.quantity), 0);
                         return { ...prod, stock: Math.max(0, prod.stock - totalDeducted) };
                     }
                     return prod;
-                }));
+                });
 
-                setOrders([newOrder, ...orders]);
+                if (window.firebaseDB) {
+                    const { db, ref, set } = window.firebaseDB;
+                    set(ref(db, `orders/${newOrder.id}`), newOrder);
+                    updatedProducts.forEach(p => {
+                        set(ref(db, `products/${p.id}`), p);
+                    });
+                }
+
                 setCurrentInvoice(newOrder);
                 setCart([]);
             };
@@ -447,8 +448,13 @@
                     rawDate: now.toISOString().split('T')[0]
                 };
 
-                setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, stock: p.stock - qty } : p));
-                setFactorySales([newSale, ...factorySales]);
+                const updatedProdStock = { ...prod, stock: prod.stock - qty };
+
+                if (window.firebaseDB) {
+                    const { db, ref, set } = window.firebaseDB;
+                    set(ref(db, `factorySales/${newSale.id}`), newSale);
+                    set(ref(db, `products/${prod.id}`), updatedProdStock);
+                }
 
                 setSelectedFactoryProduct('');
                 setFactoryQuantity('1');
@@ -475,23 +481,33 @@
                     rawDate: expenseDate || new Date().toISOString().split('T')[0]
                 };
 
-                setExpenses(prev => [newExpense, ...prev]);
+                if (window.firebaseDB) {
+                    const { db, ref, set } = window.firebaseDB;
+                    set(ref(db, `expenses/${newExpense.id}`), newExpense);
+                }
+
                 setExpenseAmount('');
                 setExpenseDetails('');
             };
 
             const handleDeleteExpense = (id) => {
                 if (confirm('هل تريد حذف هذه الصرفية؟')) {
-                    setExpenses(expenses.filter(e => e.id !== id));
+                    if (window.firebaseDB) {
+                        const { db, ref, set } = window.firebaseDB;
+                        set(ref(db, `expenses/${id}`), null);
+                    }
                 }
             };
 
             const handleSaveCategory = (catData) => {
-                if (editingCategory) {
-                    setCategories(categories.map(c => c.id === editingCategory.id ? { ...catData, id: editingCategory.id } : c));
-                } else {
-                    setCategories([...categories, { ...catData, id: 'cat_' + Date.now() }]);
+                const catId = editingCategory ? editingCategory.id : 'cat_' + Date.now();
+                const updatedCat = { ...catData, id: catId };
+
+                if (window.firebaseDB) {
+                    const { db, ref, set } = window.firebaseDB;
+                    set(ref(db, `categories/${catId}`), updatedCat);
                 }
+
                 setIsCategoryModalOpen(false);
                 setEditingCategory(null);
             };
@@ -502,23 +518,32 @@
                     return;
                 }
                 if (confirm('هل أنت متأكد من الحذف؟')) {
-                    setCategories(categories.filter(c => c.id !== catId));
+                    if (window.firebaseDB) {
+                        const { db, ref, set } = window.firebaseDB;
+                        set(ref(db, `categories/${catId}`), null);
+                    }
                 }
             };
 
             const handleSaveProduct = (prodData) => {
-                if (editingProduct) {
-                    setProducts(products.map(p => p.id === editingProduct.id ? { ...prodData, id: editingProduct.id } : p));
-                } else {
-                    setProducts([{ ...prodData, id: Date.now() }, ...products]);
+                const prodId = editingProduct ? editingProduct.id : Date.now();
+                const updatedProd = { ...prodData, id: prodId };
+
+                if (window.firebaseDB) {
+                    const { db, ref, set } = window.firebaseDB;
+                    set(ref(db, `products/${prodId}`), updatedProd);
                 }
+
                 setIsProductModalOpen(false);
                 setEditingProduct(null);
             };
 
             const handleDeleteProduct = (id) => {
                 if (confirm('هل تريد حذف هذا المنتج؟')) {
-                    setProducts(products.filter(p => p.id !== id));
+                    if (window.firebaseDB) {
+                        const { db, ref, set } = window.firebaseDB;
+                        set(ref(db, `products/${id}`), null);
+                    }
                 }
             };
 
@@ -1395,7 +1420,7 @@
                                 <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-3.5 py-2.5 bg-[#252525] border border-[#333] rounded-xl text-white font-bold" />
                             </div>
                             <div>
-                                <label className="block font-extrabold text-gray-300 mb-1.5">نوع نظام البيع</label>
+                                <label className="block font-extrabold text-gray-300 mb-1.5">نظام البيع</label>
                                 <select value={type} onChange={e => setType(e.target.value)} className="w-full px-3.5 py-2.5 bg-[#252525] border border-[#333] rounded-xl text-white font-bold">
                                     <option value="weight">نظام الأوزان على الميزان</option>
                                     <option value="piece">نظام القطع (الكيك والعصائر...)</option>
