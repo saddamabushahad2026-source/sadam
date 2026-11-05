@@ -180,7 +180,7 @@
             const [editingCategory, setEditingCategory] = useState(null);
             const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
 
-            // ربط جلب البيانات من Firebase Realtime Database مع تنقية البيانات التالفة
+            // ربط جلب البيانات من Firebase Realtime Database بدون إعادة إرسال القيم الافتراضية عند الحذف
             useEffect(() => {
                 if (window.firebaseDB) {
                     const { db, ref, onValue, set } = window.firebaseDB;
@@ -191,7 +191,8 @@
                             const validProducts = Object.values(data).filter(p => p && p.id && p.name);
                             setProducts(validProducts);
                         } else {
-                            set(ref(db, 'products'), INITIAL_PRODUCTS_OBJ);
+                            // تم إزالة إعادة الضبط التلقائي لكي لا تعود المنتجات المحذوفة
+                            setProducts([]);
                         }
                     });
 
@@ -527,6 +528,7 @@
             };
 
             const handleSaveProduct = (prodData) => {
+                // استخدام المعرف الحالي للمنتج إذا كان قيد التعديل لتجنب إنشاء منتج جديد بالاسم القديم
                 const prodId = editingProduct ? editingProduct.id : Date.now();
                 const updatedProd = { ...prodData, id: prodId };
 
