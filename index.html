@@ -79,19 +79,25 @@
             background: linear-gradient(160deg, #fffdf9 0%, #fdf2ea 55%, #faece3 100%);
             border: 2px solid #d4af37;
             border-radius: 14px;
-            padding: 10px 10px 6px;
+            padding: 12px 12px 8px;
             color: #222;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 340px;
         }
         .modern-sticker::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 4px;
+            height: 5px;
             background: linear-gradient(90deg, #6b141e, #d4af37, #9e1b2b, #d4af37, #6b141e);
+        }
+
+        /* شبكة الطباعة المخصصة لقياس A6 تبقى مخفية على الشاشة وتظهر فقط عند الطباعة */
+        .stickers-a6-print-only {
+            display: none;
         }
 
         /* شاشة الزبون عند مسح الباركود */
@@ -114,52 +120,87 @@
             font-size: 15px; font-weight: 800; direction: ltr;
         }
 
-        /* تنسيقات الطباعة */
+        /* تنسيقات الطباعة بقياس A6 كامل 100% بدون أي فراغ أو صفحات فارغة */
         @media print {
-            @page { size: A4 portrait; margin: 6mm; }
-            .no-print { display: none !important; }
-            body, html {
-                background-color: white !important;
-                color: black !important;
+            @page {
+                size: A6 portrait;
+                margin: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            html, body, #root {
+                width: 105mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                height: auto !important;
+                background: #ffffff !important;
+                color: #111111 !important;
                 overflow: visible !important;
+                height: auto !important;
             }
+
             /* طباعة الفاتورة */
             .printable-invoice {
-                position: absolute !important;
-                left: 0 !important; top: 0 !important;
-                width: 100% !important;
-                box-shadow: none !important;
+                position: static !important;
+                width: 105mm !important;
+                height: 148mm !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: #ffffff !important;
             }
-            /* طباعة 4 ستيكرات في ورقة A4 */
-            .stickers-print-grid {
-                display: grid !important;
-                grid-template-columns: 96mm 96mm !important;
-                column-gap: 6mm !important;
-                row-gap: 6mm !important;
-                width: 198mm !important;
+
+            /* إظهار شبكة ستيكرات A6 الكاملة فقط */
+            .stickers-a6-print-only {
+                display: block !important;
+                width: 105mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
             }
-            .sticker-print-item {
-                width: 96mm !important;
-                height: 138mm !important;
+
+            .a6-sticker-page {
+                width: 105mm !important;
+                height: 148mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                display: block !important;
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
-            }
-            .sticker-print-item .modern-sticker {
-                width: 96mm !important;
-                height: 138mm !important;
-                border-radius: 4mm !important;
-                box-shadow: none !important;
-            }
-            .sticker-print-item:nth-child(4n) {
                 break-after: page !important;
                 page-break-after: always !important;
+                overflow: hidden !important;
             }
-            .sticker-print-item:last-child {
+
+            /* منع إضافة ورقة فارغة بعد آخر بطاقة */
+            .a6-sticker-page:last-child {
                 break-after: auto !important;
                 page-break-after: auto !important;
+            }
+
+            /* ملء كامل مساحة ورقة A6 بدون أي فراغات */
+            .a6-sticker-page .modern-sticker {
+                width: 105mm !important;
+                height: 148mm !important;
+                min-height: 148mm !important;
+                max-height: 148mm !important;
+                border-radius: 0 !important;
+                border-width: 1.5mm !important;
+                padding: 5mm 4.5mm 4mm !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .a6-sticker-page .a6-fill-body {
+                flex: 1 1 auto !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
             }
         }
     </style>
@@ -240,6 +281,52 @@
                 }
             }, [text, size]);
             return <div ref={ref} className="flex items-center justify-center"></div>;
+        });
+
+        // تصميم بطاقة الستيكر (يُستخدم في العرض والطباعة A6 كاملة المساحة)
+        const StickerCardContent = React.memo(({ card, baseUrl, isPrintA6 = false }) => {
+            const cleanUrl = (baseUrl || '').trim();
+            return (
+                <div className="modern-sticker">
+                    <div className={isPrintA6 ? 'a6-fill-body' : ''}>
+                        <div className={`bg-gradient-to-l from-[#5c1119] to-[#8d1a27] text-white rounded-xl text-center border-2 border-[#e6be4c] shadow-sm ${isPrintA6 ? 'p-4 mb-3' : 'p-1.5 mb-2'}`}>
+                            <div className={`font-black text-[#ffe28a] ${isPrintA6 ? 'text-2xl leading-snug' : 'text-sm'}`}>حلويات الشهد خاتون</div>
+                            <div className={`font-bold text-[#fff6e5] ${isPrintA6 ? 'text-sm mt-1' : 'text-[10px]'}`}>مسابقة وعروض العلب المميزة</div>
+                        </div>
+
+                        <div className={`grid grid-cols-3 gap-2 ${isPrintA6 ? 'mb-3' : 'mb-2'}`}>
+                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
+                                عرض خاص<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>ميني كيك</strong>
+                            </div>
+                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
+                                اربح جائزة<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>250,000</strong>
+                            </div>
+                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
+                                فرصة فورية<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>جوائز أخرى</strong>
+                            </div>
+                        </div>
+
+                        <div className={`flex items-center justify-between gap-3 bg-white border-2 border-dashed border-[#c79b3b] rounded-2xl ${isPrintA6 ? 'p-4 mb-3 flex-1' : 'p-2 mb-1.5'}`}>
+                            <div className="flex-1 text-right">
+                                <div className={`font-black text-[#5c1119] mb-1.5 ${isPrintA6 ? 'text-base' : 'text-[11px]'}`}>امسح الباركود واكتشف نتيجتك</div>
+                                <div className={`font-bold text-gray-500 ${isPrintA6 ? 'text-xs' : 'text-[9px]'}`}>رقم البطاقة:</div>
+                                <div className={`mt-1.5 bg-[#fdf6e7] border border-[#d4af37] text-[#3d090e] font-black text-center rounded-lg ${isPrintA6 ? 'text-xl py-2 px-2.5 tracking-wider' : 'text-xs py-0.5 px-1.5'}`} dir="ltr">
+                                    {card.code}
+                                </div>
+                            </div>
+                            <div className={`${isPrintA6 ? 'w-[138px] h-[138px]' : 'w-[88px] h-[88px]'} flex-shrink-0 bg-white border border-gray-200 rounded-xl p-1.5 flex items-center justify-center`}>
+                                <FastQRCode text={`${cleanUrl}?c=${card.code}`} size={isPrintA6 ? 124 : 78} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={`font-amiri italic font-bold text-[#6b4c35] border-t border-dashed border-[#e2c588] pt-2 flex justify-center items-center gap-2 ${isPrintA6 ? 'text-sm' : 'text-[10px]'}`}>
+                        <span>مصمم التطبيق: مهند صباح</span>
+                        <span className="text-[#c79b3b]">•</span>
+                        <span className={`font-cairo not-italic font-extrabold text-[#5c1119] ${isPrintA6 ? 'text-sm' : 'text-[9px]'}`} dir="ltr">07869991700</span>
+                    </div>
+                </div>
+            );
         });
 
         // شاشة الزبون عند مسح الباركود من الهاتف (?c=MUH-XXXX)
@@ -386,7 +473,7 @@
             const [contestPage, setContestPage] = useState(1);
             const [contestSearchCode, setContestSearchCode] = useState('');
             const [contestStatusFilter, setContestStatusFilter] = useState('all');
-            const [isPrintingAllStickers, setIsPrintingAllStickers] = useState(false);
+            const [printCardsQueue, setPrintCardsQueue] = useState([]);
             const ITEMS_PER_PAGE = 20;
 
             // حالات نقطة البيع والمخزون والتقارير
@@ -452,7 +539,6 @@
                         setExpenses(data ? Object.values(data).filter(Boolean).reverse() : []);
                     });
 
-                    // الاستماع لبيانات المسابقة والستيكرات في نفس قاعدة البيانات
                     onValue(ref(db, 'contest_cards'), (snapshot) => {
                         const data = snapshot.val();
                         if (data) {
@@ -474,6 +560,15 @@
                     window.addEventListener('firebase-ready', initListeners);
                     return () => window.removeEventListener('firebase-ready', initListeners);
                 }
+            }, []);
+
+            // تنظيف قائمة الطباعة بعد انتهاء الطباعة
+            useEffect(() => {
+                const onAfterPrint = () => {
+                    setPrintCardsQueue([]);
+                };
+                window.addEventListener('afterprint', onAfterPrint);
+                return () => window.removeEventListener('afterprint', onAfterPrint);
             }, []);
 
             // التنقل بين التبويبات مع حماية الرمز السري
@@ -561,15 +656,6 @@
                 XLSX.writeFile(workbook, `سجل_مسابقة_الشهد_خاتون_${SEED_CODE}.xlsx`);
             };
 
-            const handlePrintAllStickers = () => {
-                if (filteredContestCards.length === 0) return;
-                setIsPrintingAllStickers(true);
-                setTimeout(() => {
-                    window.print();
-                    setIsPrintingAllStickers(false);
-                }, 450);
-            };
-
             const filteredContestCards = useMemo(() => {
                 return contestCards.filter(c => {
                     if (contestTypeFilter !== 'all' && String(c.type) !== contestTypeFilter) return false;
@@ -580,10 +666,18 @@
             const totalContestPages = Math.max(1, Math.ceil(filteredContestCards.length / ITEMS_PER_PAGE));
 
             const visibleContestCards = useMemo(() => {
-                if (isPrintingAllStickers) return filteredContestCards;
                 const start = (contestPage - 1) * ITEMS_PER_PAGE;
                 return filteredContestCards.slice(start, start + ITEMS_PER_PAGE);
-            }, [filteredContestCards, contestPage, isPrintingAllStickers]);
+            }, [filteredContestCards, contestPage]);
+
+            // تشغيل طباعة A6 مباشرة بعد رسم البطاقات المطلوبة
+            const triggerA6Print = (cardsList) => {
+                if (!cardsList || cardsList.length === 0) return;
+                setPrintCardsQueue(cardsList);
+                setTimeout(() => {
+                    window.print();
+                }, 400);
+            };
 
             const filteredContestLogs = useMemo(() => {
                 return contestCards.filter(c => {
@@ -838,220 +932,279 @@
             }, [filteredOrders, filteredFactoryReports, filteredExpensesReports]);
 
             return (
-                <div className="flex flex-col h-screen overflow-hidden bg-[#121212] text-gray-200">
-                    {/* NAVBAR */}
-                    <header className="bg-[#1A1A1A] text-gray-200 border-b border-[#2D2D2D] shadow-md z-20 flex-shrink-0 no-print">
-                        <div className="max-w-7xl mx-auto px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center space-x-2.5 space-x-reverse">
-                                <div className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center text-white text-lg font-bold shadow">
-                                    <i className="fa-solid fa-ice-cream"></i>
+                <>
+                    <div className="flex flex-col h-screen overflow-hidden bg-[#121212] text-gray-200 no-print">
+                        {/* NAVBAR */}
+                        <header className="bg-[#1A1A1A] text-gray-200 border-b border-[#2D2D2D] shadow-md z-20 flex-shrink-0">
+                            <div className="max-w-7xl mx-auto px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center space-x-2.5 space-x-reverse">
+                                    <div className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center text-white text-lg font-bold shadow">
+                                        <i className="fa-solid fa-ice-cream"></i>
+                                    </div>
+                                    <div>
+                                        <h1 className="text-sm sm:text-base font-black text-white">حلويات ومرطبات الشهد خاتون</h1>
+                                        <p className="text-[11px] text-emerald-400 font-bold">نظام الكاشير، المعمل، والمسابقات</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h1 className="text-sm sm:text-base font-black text-white">حلويات ومرطبات الشهد خاتون</h1>
-                                    <p className="text-[11px] text-emerald-400 font-bold">نظام الكاشير، المعمل، والمسابقات</p>
+
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <button onClick={() => alert('تم إرسال إشارة فتح درج النقود بنجاح.')} className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow flex items-center gap-1">
+                                        <i className="fa-solid fa-cash-register"></i> فتح الصندوق
+                                    </button>
+
+                                    <nav className="flex gap-1 bg-[#252525] p-1 rounded-xl border border-[#333] overflow-x-auto">
+                                        <button onClick={() => handleTabChangeRequest('pos')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'pos' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-cash-register ml-1"></i> نقطة البيع
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('factory')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'factory' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-industry ml-1"></i> المعمل
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('expenses')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'expenses' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-wallet ml-1"></i> الصرفيات
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('categories')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'categories' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> الأقسام
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('inventory')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'inventory' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> المخزون
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('contest')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'contest' ? 'bg-amber-600 text-white' : 'text-amber-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-lock text-[10px] ml-1"></i><i className="fa-solid fa-gift ml-1"></i> المسابقة والستيكرات
+                                        </button>
+                                        <button onClick={() => handleTabChangeRequest('reports')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'reports' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
+                                            <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> التقارير
+                                        </button>
+                                    </nav>
                                 </div>
                             </div>
+                        </header>
 
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <button onClick={() => alert('تم إرسال إشارة فتح درج النقود بنجاح.')} className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow flex items-center gap-1">
-                                    <i className="fa-solid fa-cash-register"></i> فتح الصندوق
-                                </button>
+                        {/* MAIN CONTENT */}
+                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden pb-8">
 
-                                <nav className="flex gap-1 bg-[#252525] p-1 rounded-xl border border-[#333] overflow-x-auto">
-                                    <button onClick={() => handleTabChangeRequest('pos')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'pos' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-cash-register ml-1"></i> نقطة البيع
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('factory')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'factory' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-industry ml-1"></i> المعمل
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('expenses')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'expenses' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-wallet ml-1"></i> الصرفيات
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('categories')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'categories' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> الأقسام
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('inventory')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'inventory' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> المخزون
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('contest')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'contest' ? 'bg-amber-600 text-white' : 'text-amber-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-lock text-[10px] ml-1"></i><i className="fa-solid fa-gift ml-1"></i> المسابقة والستيكرات
-                                    </button>
-                                    <button onClick={() => handleTabChangeRequest('reports')} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeTab === 'reports' ? 'bg-pink-600 text-white' : 'text-gray-300 hover:bg-[#333]'}`}>
-                                        <i className="fa-solid fa-lock text-[10px] ml-1 text-pink-400"></i> التقارير
-                                    </button>
-                                </nav>
-                            </div>
-                        </div>
-                    </header>
-
-                    {/* MAIN CONTENT */}
-                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden pb-8">
-
-                        {/* 1. POS TAB */}
-                        {activeTab === 'pos' && (
-                            <div className="flex-1 flex flex-col-reverse md:flex-row overflow-hidden w-full h-full">
-                                <div className="flex-1 flex flex-col p-3 sm:p-4 overflow-hidden bg-[#121212] no-print">
-                                    <div className="space-y-3 mb-3 flex-shrink-0">
-                                        <div className="relative">
-                                            <input type="text" placeholder="ابحث باسم المادة أو الباركود..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pr-10 pl-4 py-2.5 text-sm bg-[#1E1E1E] border border-[#2D2D2D] rounded-xl text-white font-bold focus:outline-none focus:ring-2 focus:ring-pink-500" />
-                                            <i className="fa-solid fa-magnifying-glass absolute right-3.5 top-3 text-gray-400"></i>
-                                        </div>
-                                        <div className="flex space-x-2 space-x-reverse overflow-x-auto pb-1">
-                                            <button onClick={() => setSelectedCategory('all')} className={`px-4 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap ${selectedCategory === 'all' ? 'bg-pink-600 text-white' : 'bg-[#1E1E1E] text-gray-300 border border-[#2D2D2D]'}`}>الكل</button>
-                                            {categories.map(cat => (
-                                                <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={selectedCategory === cat.id ? { backgroundColor: cat.color || '#EC4899', color: '#fff' } : {}} className={`px-4 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap ${selectedCategory === cat.id ? 'shadow' : 'bg-[#1E1E1E] text-gray-300 border border-[#2D2D2D]'}`}>
-                                                    {cat.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto pr-1">
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                            {filteredProducts.map(prod => {
-                                                const isPiece = categories.find(c => c.id === prod.category)?.type === 'piece';
-                                                return (
-                                                    <div key={prod.id} onClick={() => addOrIncrementProductDirectly(prod)} className="group bg-[#1E1E1E] rounded-2xl p-3 border border-[#2D2D2D] hover:border-pink-500/60 cursor-pointer flex flex-col justify-between relative transition-all active:scale-95">
-                                                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold z-10 bg-emerald-950/90 text-emerald-300 border border-emerald-800">
-                                                            {prod.stock > 0 ? `متبقي: ${prod.stock}` : 'نفد'}
-                                                        </div>
-                                                        <div>
-                                                            <div className="h-24 w-full rounded-xl overflow-hidden mb-2 bg-[#252525]">
-                                                                <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" onError={e => e.target.src='https://placehold.co/300x300/222/FFF?text=صنف'} />
-                                                            </div>
-                                                            <h3 className="font-extrabold text-white text-xs sm:text-sm line-clamp-2">{prod.name}</h3>
-                                                        </div>
-                                                        <div className="mt-2 flex items-center justify-between pt-2 border-t border-[#2A2A2A]">
-                                                            <span className="text-pink-400 font-black text-xs sm:text-sm">
-                                                                {prod.price.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">{isPiece ? 'د.ع/ق' : 'د.ع/كغ'}</span>
-                                                            </span>
-                                                            <span className="w-7 h-7 rounded-full bg-pink-600 flex items-center justify-center text-white"><i className="fa-solid fa-plus text-xs"></i></span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* CART SIDEBAR */}
-                                <div className="w-full md:w-80 lg:w-96 bg-[#181818] border-l border-[#2D2D2D] flex flex-col h-full shadow-xl flex-shrink-0 no-print">
-                                    <div className="p-3 bg-[#202020] border-b border-[#2D2D2D] flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-white">
-                                            <i className="fa-solid fa-cart-shopping text-pink-500"></i>
-                                            <h2 className="font-extrabold text-sm">سلة الطلبات</h2>
-                                        </div>
-                                        {cart.length > 0 && <button onClick={() => setCart([])} className="text-xs text-red-400 bg-red-950/50 px-2.5 py-1 rounded-lg font-bold">تفريغ</button>}
-                                    </div>
-
-                                    <div className="p-2.5 border-b border-[#2D2D2D]">
-                                        <form onSubmit={handleScanSubmit} className="relative">
-                                            <input type="text" placeholder="مسح الباركود للإضافة الفورية..." value={scanInput} onChange={e => setScanInput(e.target.value)} className="w-full pr-9 pl-3 py-2 text-xs bg-[#222] text-white font-bold border border-[#333] rounded-xl focus:outline-none focus:ring-1 focus:ring-pink-500" autoFocus />
-                                            <i className="fa-solid fa-qrcode absolute right-3 top-2.5 text-gray-400 text-sm"></i>
-                                        </form>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                                        {cart.length === 0 ? (
-                                            <div className="h-full flex flex-col items-center justify-center text-gray-500 py-12">
-                                                <i className="fa-solid fa-basket-shopping text-3xl text-gray-700 mb-1"></i>
-                                                <p className="text-xs font-bold">السلة فارغة حالياً</p>
+                            {/* 1. POS TAB */}
+                            {activeTab === 'pos' && (
+                                <div className="flex-1 flex flex-col-reverse md:flex-row overflow-hidden w-full h-full">
+                                    <div className="flex-1 flex flex-col p-3 sm:p-4 overflow-hidden bg-[#121212]">
+                                        <div className="space-y-3 mb-3 flex-shrink-0">
+                                            <div className="relative">
+                                                <input type="text" placeholder="ابحث باسم المادة أو الباركود..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pr-10 pl-4 py-2.5 text-sm bg-[#1E1E1E] border border-[#2D2D2D] rounded-xl text-white font-bold focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                                                <i className="fa-solid fa-magnifying-glass absolute right-3.5 top-3 text-gray-400"></i>
                                             </div>
-                                        ) : (
-                                            cart.map(item => (
-                                                <div key={item.cartKey} className="flex items-center justify-between bg-[#222] p-2.5 rounded-xl border border-[#333]">
-                                                    <div className="flex-1 min-w-0 ml-2">
-                                                        <h4 className="font-extrabold text-white text-xs truncate">{item.name}</h4>
-                                                        <div className="text-[11px] text-pink-400 font-bold">{item.detailsLabel}</div>
-                                                        <div className="text-xs font-black text-emerald-400">{item.itemTotal.toLocaleString()} د.ع</div>
+                                            <div className="flex space-x-2 space-x-reverse overflow-x-auto pb-1">
+                                                <button onClick={() => setSelectedCategory('all')} className={`px-4 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap ${selectedCategory === 'all' ? 'bg-pink-600 text-white' : 'bg-[#1E1E1E] text-gray-300 border border-[#2D2D2D]'}`}>الكل</button>
+                                                {categories.map(cat => (
+                                                    <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={selectedCategory === cat.id ? { backgroundColor: cat.color || '#EC4899', color: '#fff' } : {}} className={`px-4 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap ${selectedCategory === cat.id ? 'shadow' : 'bg-[#1E1E1E] text-gray-300 border border-[#2D2D2D]'}`}>
+                                                        {cat.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto pr-1">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                {filteredProducts.map(prod => {
+                                                    const isPiece = categories.find(c => c.id === prod.category)?.type === 'piece';
+                                                    return (
+                                                        <div key={prod.id} onClick={() => addOrIncrementProductDirectly(prod)} className="group bg-[#1E1E1E] rounded-2xl p-3 border border-[#2D2D2D] hover:border-pink-500/60 cursor-pointer flex flex-col justify-between relative transition-all active:scale-95">
+                                                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold z-10 bg-emerald-950/90 text-emerald-300 border border-emerald-800">
+                                                                {prod.stock > 0 ? `متبقي: ${prod.stock}` : 'نفد'}
+                                                            </div>
+                                                            <div>
+                                                                <div className="h-24 w-full rounded-xl overflow-hidden mb-2 bg-[#252525]">
+                                                                    <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" onError={e => e.target.src='https://placehold.co/300x300/222/FFF?text=صنف'} />
+                                                                </div>
+                                                                <h3 className="font-extrabold text-white text-xs sm:text-sm line-clamp-2">{prod.name}</h3>
+                                                            </div>
+                                                            <div className="mt-2 flex items-center justify-between pt-2 border-t border-[#2A2A2A]">
+                                                                <span className="text-pink-400 font-black text-xs sm:text-sm">
+                                                                    {prod.price.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">{isPiece ? 'د.ع/ق' : 'د.ع/كغ'}</span>
+                                                                </span>
+                                                                <span className="w-7 h-7 rounded-full bg-pink-600 flex items-center justify-center text-white"><i className="fa-solid fa-plus text-xs"></i></span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* CART SIDEBAR */}
+                                    <div className="w-full md:w-80 lg:w-96 bg-[#181818] border-l border-[#2D2D2D] flex flex-col h-full shadow-xl flex-shrink-0">
+                                        <div className="p-3 bg-[#202020] border-b border-[#2D2D2D] flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-white">
+                                                <i className="fa-solid fa-cart-shopping text-pink-500"></i>
+                                                <h2 className="font-extrabold text-sm">سلة الطلبات</h2>
+                                            </div>
+                                            {cart.length > 0 && <button onClick={() => setCart([])} className="text-xs text-red-400 bg-red-950/50 px-2.5 py-1 rounded-lg font-bold">تفريغ</button>}
+                                        </div>
+
+                                        <div className="p-2.5 border-b border-[#2D2D2D]">
+                                            <form onSubmit={handleScanSubmit} className="relative">
+                                                <input type="text" placeholder="مسح الباركود للإضافة الفورية..." value={scanInput} onChange={e => setScanInput(e.target.value)} className="w-full pr-9 pl-3 py-2 text-xs bg-[#222] text-white font-bold border border-[#333] rounded-xl focus:outline-none focus:ring-1 focus:ring-pink-500" autoFocus />
+                                                <i className="fa-solid fa-qrcode absolute right-3 top-2.5 text-gray-400 text-sm"></i>
+                                            </form>
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                                            {cart.length === 0 ? (
+                                                <div className="h-full flex flex-col items-center justify-center text-gray-500 py-12">
+                                                    <i className="fa-solid fa-basket-shopping text-3xl text-gray-700 mb-1"></i>
+                                                    <p className="text-xs font-bold">السلة فارغة حالياً</p>
+                                                </div>
+                                            ) : (
+                                                cart.map(item => (
+                                                    <div key={item.cartKey} className="flex items-center justify-between bg-[#222] p-2.5 rounded-xl border border-[#333]">
+                                                        <div className="flex-1 min-w-0 ml-2">
+                                                            <h4 className="font-extrabold text-white text-xs truncate">{item.name}</h4>
+                                                            <div className="text-[11px] text-pink-400 font-bold">{item.detailsLabel}</div>
+                                                            <div className="text-xs font-black text-emerald-400">{item.itemTotal.toLocaleString()} د.ع</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <button onClick={() => updateCartQuantity(item.cartKey, -1)} className="w-7 h-7 rounded-lg bg-[#2A2A2A] text-white font-bold">-</button>
+                                                            <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
+                                                            <button onClick={() => updateCartQuantity(item.cartKey, 1)} className="w-7 h-7 rounded-lg bg-[#2A2A2A] text-white font-bold">+</button>
+                                                            <button onClick={() => setCart(prev => prev.filter(i => i.cartKey !== item.cartKey))} className="w-7 h-7 rounded-lg bg-red-950/60 text-red-400 mr-1"><i className="fa-solid fa-trash-can text-xs"></i></button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <button onClick={() => updateCartQuantity(item.cartKey, -1)} className="w-7 h-7 rounded-lg bg-[#2A2A2A] text-white font-bold">-</button>
-                                                        <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
-                                                        <button onClick={() => updateCartQuantity(item.cartKey, 1)} className="w-7 h-7 rounded-lg bg-[#2A2A2A] text-white font-bold">+</button>
-                                                        <button onClick={() => setCart(prev => prev.filter(i => i.cartKey !== item.cartKey))} className="w-7 h-7 rounded-lg bg-red-950/60 text-red-400 mr-1"><i className="fa-solid fa-trash-can text-xs"></i></button>
+                                                ))
+                                            )}
+                                        </div>
+
+                                        <div className="p-3.5 bg-[#202020] border-t border-[#2D2D2D] space-y-2.5">
+                                            <div className="flex justify-between items-center text-white bg-[#252525] p-3 rounded-xl border border-[#333]">
+                                                <span className="font-black text-sm">المجمع الكلي:</span>
+                                                <span className="font-black text-xl text-pink-400">{grandTotal.toLocaleString()} <span className="text-xs">د.ع</span></span>
+                                            </div>
+                                            <button disabled={cart.length === 0} onClick={handleCheckoutOpenDrawer} className={`w-full py-3 rounded-xl font-black text-white text-sm shadow-lg flex items-center justify-center gap-2 ${cart.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 cursor-pointer' : 'bg-[#2A2A2A] text-gray-600 cursor-not-allowed'}`}>
+                                                <i className="fa-solid fa-cash-register"></i><span>إتمام الطلب وفتح الدرج</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 2. FACTORY TAB */}
+                            {activeTab === 'factory' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-6xl mx-auto space-y-6">
+                                        <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D]">
+                                            <h2 className="text-base font-black text-white mb-4 flex items-center gap-2">
+                                                <i className="fa-solid fa-industry text-pink-500"></i> مبيعات المعمل (أسعار مستقلة)
+                                            </h2>
+                                            <form onSubmit={handleAddFactorySale} className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">المادة من المخزن</label>
+                                                    <select value={selectedFactoryProduct} onChange={e => {
+                                                        setSelectedFactoryProduct(e.target.value);
+                                                        const p = products.find(prod => prod.id === parseInt(e.target.value));
+                                                        if (p) setFactoryPriceCustom(p.factoryPrice !== undefined ? p.factoryPrice : p.price);
+                                                    }} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
+                                                        <option value="">-- اختر مادة --</option>
+                                                        {products.map(p => <option key={p.id} value={p.id}>{p.name} (المتوفر: {p.stock})</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">الكمية المباعة</label>
+                                                    <input type="number" step="any" value={factoryQuantity} onChange={e => setFactoryQuantity(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">سعر المعمل</label>
+                                                    <input type="number" value={factoryPriceCustom} onChange={e => setFactoryPriceCustom(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-pink-400 font-black" />
+                                                </div>
+                                                <div className="flex items-end">
+                                                    <button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-2 rounded-xl text-xs">إضافة مبيعات المعمل</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] p-5">
+                                            <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+                                                <h3 className="font-black text-white text-sm">سجل مبيعات المعمل</h3>
+                                                <div className="flex gap-2">
+                                                    <input type="text" placeholder="بحث بالاسم..." value={factorySearchName} onChange={e => setFactorySearchName(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-1.5 text-xs text-white font-bold" />
+                                                    <input type="date" value={factorySearchDate} onChange={e => setFactorySearchDate(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-1.5 text-xs text-white font-bold" />
+                                                </div>
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-right text-xs">
+                                                    <thead>
+                                                        <tr className="bg-[#252525] text-gray-300 font-black border-b border-[#333]">
+                                                            <th className="p-3">رقم الحركة</th>
+                                                            <th className="p-3">المادة</th>
+                                                            <th className="p-3">الكمية</th>
+                                                            <th className="p-3">سعر المعمل</th>
+                                                            <th className="p-3">الإجمالي</th>
+                                                            <th className="p-3">التاريخ</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-[#2D2D2D]">
+                                                        {filteredFactorySales.map(sale => (
+                                                            <tr key={sale.id} className="hover:bg-[#222]">
+                                                                <td className="p-3 font-mono font-bold text-pink-400">{sale.id}</td>
+                                                                <td className="p-3 font-extrabold">{sale.productName}</td>
+                                                                <td className="p-3 font-bold">{sale.quantity}</td>
+                                                                <td className="p-3 font-bold">{sale.price.toLocaleString()} د.ع</td>
+                                                                <td className="p-3 font-black text-emerald-400">{sale.total.toLocaleString()} د.ع</td>
+                                                                <td className="p-3 text-gray-400">{sale.date}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 3. EXPENSES TAB */}
+                            {activeTab === 'expenses' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-4xl mx-auto space-y-6">
+                                        <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D]">
+                                            <h2 className="text-base font-black text-white mb-4 flex items-center gap-2">
+                                                <i className="fa-solid fa-wallet text-pink-500"></i> تسجيل المصروفات النقدية
+                                            </h2>
+                                            <form onSubmit={handleAddExpense} className="space-y-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="block text-xs font-extrabold text-gray-300 mb-1">المبلغ المصروف (د.ع)</label>
+                                                        <input type="number" value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-sm text-white font-black" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-extrabold text-gray-300 mb-1">تاريخ الصرف</label>
+                                                        <input type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-sm text-white font-bold" />
                                                     </div>
                                                 </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    <div className="p-3.5 bg-[#202020] border-t border-[#2D2D2D] space-y-2.5">
-                                        <div className="flex justify-between items-center text-white bg-[#252525] p-3 rounded-xl border border-[#333]">
-                                            <span className="font-black text-sm">المجمع الكلي:</span>
-                                            <span className="font-black text-xl text-pink-400">{grandTotal.toLocaleString()} <span className="text-xs">د.ع</span></span>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">بيان الصرف</label>
+                                                    <input type="text" value={expenseDetails} onChange={e => setExpenseDetails(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" placeholder="تفاصيل الصرف..." />
+                                                </div>
+                                                <button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-2.5 rounded-xl text-xs">حفظ المصروف</button>
+                                            </form>
                                         </div>
-                                        <button disabled={cart.length === 0} onClick={handleCheckoutOpenDrawer} className={`w-full py-3 rounded-xl font-black text-white text-sm shadow-lg flex items-center justify-center gap-2 ${cart.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 cursor-pointer' : 'bg-[#2A2A2A] text-gray-600 cursor-not-allowed'}`}>
-                                            <i className="fa-solid fa-cash-register"></i><span>إتمام الطلب وفتح الدرج</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* 2. FACTORY TAB */}
-                        {activeTab === 'factory' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212] no-print">
-                                <div className="max-w-6xl mx-auto space-y-6">
-                                    <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D]">
-                                        <h2 className="text-base font-black text-white mb-4 flex items-center gap-2">
-                                            <i className="fa-solid fa-industry text-pink-500"></i> مبيعات المعمل (أسعار مستقلة)
-                                        </h2>
-                                        <form onSubmit={handleAddFactorySale} className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
-                                            <div>
-                                                <label className="block text-xs font-extrabold text-gray-300 mb-1">المادة من المخزن</label>
-                                                <select value={selectedFactoryProduct} onChange={e => {
-                                                    setSelectedFactoryProduct(e.target.value);
-                                                    const p = products.find(prod => prod.id === parseInt(e.target.value));
-                                                    if (p) setFactoryPriceCustom(p.factoryPrice !== undefined ? p.factoryPrice : p.price);
-                                                }} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
-                                                    <option value="">-- اختر مادة --</option>
-                                                    {products.map(p => <option key={p.id} value={p.id}>{p.name} (المتوفر: {p.stock})</option>)}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-extrabold text-gray-300 mb-1">الكمية المباعة</label>
-                                                <input type="number" step="any" value={factoryQuantity} onChange={e => setFactoryQuantity(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-extrabold text-gray-300 mb-1">سعر المعمل</label>
-                                                <input type="number" value={factoryPriceCustom} onChange={e => setFactoryPriceCustom(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-pink-400 font-black" />
-                                            </div>
-                                            <div className="flex items-end">
-                                                <button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-2 rounded-xl text-xs">إضافة مبيعات المعمل</button>
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                    <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] p-5">
-                                        <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
-                                            <h3 className="font-black text-white text-sm">سجل مبيعات المعمل</h3>
-                                            <div className="flex gap-2">
-                                                <input type="text" placeholder="بحث بالاسم..." value={factorySearchName} onChange={e => setFactorySearchName(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-1.5 text-xs text-white font-bold" />
-                                                <input type="date" value={factorySearchDate} onChange={e => setFactorySearchDate(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-1.5 text-xs text-white font-bold" />
-                                            </div>
-                                        </div>
-                                        <div className="overflow-x-auto">
+                                        <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] p-5">
                                             <table className="w-full text-right text-xs">
                                                 <thead>
                                                     <tr className="bg-[#252525] text-gray-300 font-black border-b border-[#333]">
                                                         <th className="p-3">رقم الحركة</th>
-                                                        <th className="p-3">المادة</th>
-                                                        <th className="p-3">الكمية</th>
-                                                        <th className="p-3">سعر المعمل</th>
-                                                        <th className="p-3">الإجمالي</th>
+                                                        <th className="p-3">البيان</th>
+                                                        <th className="p-3">المبلغ</th>
                                                         <th className="p-3">التاريخ</th>
+                                                        <th className="p-3 text-center">حذف</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-[#2D2D2D]">
-                                                    {filteredFactorySales.map(sale => (
-                                                        <tr key={sale.id} className="hover:bg-[#222]">
-                                                            <td className="p-3 font-mono font-bold text-pink-400">{sale.id}</td>
-                                                            <td className="p-3 font-extrabold">{sale.productName}</td>
-                                                            <td className="p-3 font-bold">{sale.quantity}</td>
-                                                            <td className="p-3 font-bold">{sale.price.toLocaleString()} د.ع</td>
-                                                            <td className="p-3 font-black text-emerald-400">{sale.total.toLocaleString()} د.ع</td>
-                                                            <td className="p-3 text-gray-400">{sale.date}</td>
+                                                    {expenses.map(exp => (
+                                                        <tr key={exp.id}>
+                                                            <td className="p-3 font-mono text-pink-400">{exp.id}</td>
+                                                            <td className="p-3 font-bold text-white">{exp.details}</td>
+                                                            <td className="p-3 font-black text-red-400">{exp.amount.toLocaleString()} د.ع</td>
+                                                            <td className="p-3 text-gray-400">{exp.date}</td>
+                                                            <td className="p-3 text-center">
+                                                                <button onClick={() => handleDeleteExpense(exp.id)} className="px-2.5 py-1 bg-red-950/60 text-red-400 rounded-lg font-bold">حذف</button>
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -1059,473 +1212,391 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* 3. EXPENSES TAB */}
-                        {activeTab === 'expenses' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212] no-print">
-                                <div className="max-w-4xl mx-auto space-y-6">
-                                    <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D]">
-                                        <h2 className="text-base font-black text-white mb-4 flex items-center gap-2">
-                                            <i className="fa-solid fa-wallet text-pink-500"></i> تسجيل المصروفات النقدية
-                                        </h2>
-                                        <form onSubmit={handleAddExpense} className="space-y-3">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">المبلغ المصروف (د.ع)</label>
-                                                    <input type="number" value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-sm text-white font-black" />
+                            {/* 4. CATEGORIES TAB */}
+                            {activeTab === 'categories' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-5xl mx-auto space-y-5">
+                                        <div className="flex justify-between items-center bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
+                                            <h2 className="text-base font-black text-white">إدارة الأقسام</h2>
+                                            <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="bg-pink-600 text-white font-black px-4 py-2 rounded-xl text-xs">+ إضافة قسم</button>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {categories.map(cat => (
+                                                <div key={cat.id} className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] flex justify-between items-center">
+                                                    <div>
+                                                        <h3 className="font-black text-white text-sm">{cat.name}</h3>
+                                                        <span className="text-[11px] text-pink-400 font-bold">{cat.type === 'piece' ? 'نظام القطع' : 'نظام الأوزان'}</span>
+                                                    </div>
+                                                    <div className="flex gap-1.5">
+                                                        <button onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }} className="px-3 py-1 bg-blue-950/60 text-blue-400 rounded-lg text-xs font-bold">تعديل</button>
+                                                        <button onClick={() => handleDeleteCategory(cat.id)} className="px-3 py-1 bg-red-950/60 text-red-400 rounded-lg text-xs font-bold">حذف</button>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-xs font-extrabold text-gray-300 mb-1">تاريخ الصرف</label>
-                                                    <input type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-sm text-white font-bold" />
-                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 5. INVENTORY TAB */}
+                            {activeTab === 'inventory' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-6xl mx-auto space-y-5">
+                                        <div className="flex flex-wrap justify-between items-center bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] gap-3">
+                                            <h2 className="text-base font-black text-white">إدارة المخزون والأسعار</h2>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => setBarcodeModalProduct('ALL')} className="bg-purple-600 text-white font-black px-4 py-2 rounded-xl text-xs">طباعة باركود الكل</button>
+                                                <button onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} className="bg-pink-600 text-white font-black px-4 py-2 rounded-xl text-xs">+ إضافة منتج</button>
                                             </div>
+                                        </div>
+                                        <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] overflow-x-auto">
+                                            <table className="w-full text-right text-xs">
+                                                <thead>
+                                                    <tr className="bg-[#252525] text-gray-300 font-black border-b border-[#2D2D2D]">
+                                                        <th className="p-3">المنتج</th>
+                                                        <th className="p-3">الباركود</th>
+                                                        <th className="p-3">التكلفة</th>
+                                                        <th className="p-3">المعمل</th>
+                                                        <th className="p-3">المفرد</th>
+                                                        <th className="p-3">المخزون</th>
+                                                        <th className="p-3 text-center">إجراءات</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-[#2A2A2A]">
+                                                    {products.map(prod => (
+                                                        <tr key={prod.id} className="hover:bg-[#222]">
+                                                            <td className="p-3 font-extrabold text-white">{prod.name}</td>
+                                                            <td className="p-3 font-mono text-pink-400">{prod.barcode}</td>
+                                                            <td className="p-3 text-amber-400">{(prod.costPrice || 0).toLocaleString()}</td>
+                                                            <td className="p-3 text-cyan-400">{(prod.factoryPrice || prod.price).toLocaleString()}</td>
+                                                            <td className="p-3 text-pink-400 font-black">{prod.price.toLocaleString()}</td>
+                                                            <td className="p-3 font-bold">{prod.stock}</td>
+                                                            <td className="p-3 text-center space-x-1.5 space-x-reverse">
+                                                                <button onClick={() => setBarcodeModalProduct(prod)} className="px-2.5 py-1 bg-purple-950/60 text-purple-300 rounded-lg"><i className="fa-solid fa-barcode"></i></button>
+                                                                <button onClick={() => { setEditingProduct(prod); setIsProductModalOpen(true); }} className="px-2.5 py-1 bg-blue-950/60 text-blue-400 rounded-lg font-bold">تعديل</button>
+                                                                <button onClick={() => handleDeleteProduct(prod.id)} className="px-2.5 py-1 bg-red-950/60 text-red-400 rounded-lg font-bold">حذف</button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 6. CONTEST & STICKERS TAB */}
+                            {activeTab === 'contest' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-7xl mx-auto space-y-5">
+                                        <div className="bg-gradient-to-l from-[#3d090e] to-[#1E1E1E] p-5 rounded-2xl border border-amber-500/40 flex flex-wrap justify-between items-center gap-4">
                                             <div>
-                                                <label className="block text-xs font-extrabold text-gray-300 mb-1">بيان الصرف</label>
-                                                <input type="text" value={expenseDetails} onChange={e => setExpenseDetails(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" placeholder="تفاصيل الصرف..." />
+                                                <h2 className="text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
+                                                    <i className="fa-solid fa-gift"></i> نظام مسابقة العلب والستيكرات الذكية ({SEED_CODE}) - قياس A6 كامل
+                                                </h2>
+                                                <p className="text-xs text-gray-300 mt-1">
+                                                    مرتبط بقاعدة البيانات السحابية | البطاقات المولدة: <strong className="text-white">{contestCards.length}</strong> | المستخدمة: <strong className="text-emerald-400">{Object.keys(contestRedeemed).length}</strong>
+                                                </p>
                                             </div>
-                                            <button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-2.5 rounded-xl text-xs">حفظ المصروف</button>
-                                        </form>
-                                    </div>
-
-                                    <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] p-5">
-                                        <table className="w-full text-right text-xs">
-                                            <thead>
-                                                <tr className="bg-[#252525] text-gray-300 font-black border-b border-[#333]">
-                                                    <th className="p-3">رقم الحركة</th>
-                                                    <th className="p-3">البيان</th>
-                                                    <th className="p-3">المبلغ</th>
-                                                    <th className="p-3">التاريخ</th>
-                                                    <th className="p-3 text-center">حذف</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-[#2D2D2D]">
-                                                {expenses.map(exp => (
-                                                    <tr key={exp.id}>
-                                                        <td className="p-3 font-mono text-pink-400">{exp.id}</td>
-                                                        <td className="p-3 font-bold text-white">{exp.details}</td>
-                                                        <td className="p-3 font-black text-red-400">{exp.amount.toLocaleString()} د.ع</td>
-                                                        <td className="p-3 text-gray-400">{exp.date}</td>
-                                                        <td className="p-3 text-center">
-                                                            <button onClick={() => handleDeleteExpense(exp.id)} className="px-2.5 py-1 bg-red-950/60 text-red-400 rounded-lg font-bold">حذف</button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 4. CATEGORIES TAB */}
-                        {activeTab === 'categories' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212] no-print">
-                                <div className="max-w-5xl mx-auto space-y-5">
-                                    <div className="flex justify-between items-center bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
-                                        <h2 className="text-base font-black text-white">إدارة الأقسام</h2>
-                                        <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="bg-pink-600 text-white font-black px-4 py-2 rounded-xl text-xs">+ إضافة قسم</button>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        {categories.map(cat => (
-                                            <div key={cat.id} className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] flex justify-between items-center">
-                                                <div>
-                                                    <h3 className="font-black text-white text-sm">{cat.name}</h3>
-                                                    <span className="text-[11px] text-pink-400 font-bold">{cat.type === 'piece' ? 'نظام القطع' : 'نظام الأوزان'}</span>
-                                                </div>
-                                                <div className="flex gap-1.5">
-                                                    <button onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }} className="px-3 py-1 bg-blue-950/60 text-blue-400 rounded-lg text-xs font-bold">تعديل</button>
-                                                    <button onClick={() => handleDeleteCategory(cat.id)} className="px-3 py-1 bg-red-950/60 text-red-400 rounded-lg text-xs font-bold">حذف</button>
-                                                </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button onClick={() => setContestSubTab('stickers')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'stickers' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
+                                                    <i className="fa-solid fa-qrcode ml-1"></i> الستيكرات والطباعة
+                                                </button>
+                                                <button onClick={() => setContestSubTab('log')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'log' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
+                                                    <i className="fa-solid fa-list-check ml-1"></i> سجل النتائج والقرعة
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 5. INVENTORY TAB */}
-                        {activeTab === 'inventory' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212] no-print">
-                                <div className="max-w-6xl mx-auto space-y-5">
-                                    <div className="flex flex-wrap justify-between items-center bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] gap-3">
-                                        <h2 className="text-base font-black text-white">إدارة المخزون والأسعار</h2>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setBarcodeModalProduct('ALL')} className="bg-purple-600 text-white font-black px-4 py-2 rounded-xl text-xs">طباعة باركود الكل</button>
-                                            <button onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} className="bg-pink-600 text-white font-black px-4 py-2 rounded-xl text-xs">+ إضافة منتج</button>
                                         </div>
-                                    </div>
-                                    <div className="bg-[#1E1E1E] rounded-2xl border border-[#2D2D2D] overflow-x-auto">
-                                        <table className="w-full text-right text-xs">
-                                            <thead>
-                                                <tr className="bg-[#252525] text-gray-300 font-black border-b border-[#2D2D2D]">
-                                                    <th className="p-3">المنتج</th>
-                                                    <th className="p-3">الباركود</th>
-                                                    <th className="p-3">التكلفة</th>
-                                                    <th className="p-3">المعمل</th>
-                                                    <th className="p-3">المفرد</th>
-                                                    <th className="p-3">المخزون</th>
-                                                    <th className="p-3 text-center">إجراءات</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-[#2A2A2A]">
-                                                {products.map(prod => (
-                                                    <tr key={prod.id} className="hover:bg-[#222]">
-                                                        <td className="p-3 font-extrabold text-white">{prod.name}</td>
-                                                        <td className="p-3 font-mono text-pink-400">{prod.barcode}</td>
-                                                        <td className="p-3 text-amber-400">{(prod.costPrice || 0).toLocaleString()}</td>
-                                                        <td className="p-3 text-cyan-400">{(prod.factoryPrice || prod.price).toLocaleString()}</td>
-                                                        <td className="p-3 text-pink-400 font-black">{prod.price.toLocaleString()}</td>
-                                                        <td className="p-3 font-bold">{prod.stock}</td>
-                                                        <td className="p-3 text-center space-x-1.5 space-x-reverse">
-                                                            <button onClick={() => setBarcodeModalProduct(prod)} className="px-2.5 py-1 bg-purple-950/60 text-purple-300 rounded-lg"><i className="fa-solid fa-barcode"></i></button>
-                                                            <button onClick={() => { setEditingProduct(prod); setIsProductModalOpen(true); }} className="px-2.5 py-1 bg-blue-950/60 text-blue-400 rounded-lg font-bold">تعديل</button>
-                                                            <button onClick={() => handleDeleteProduct(prod.id)} className="px-2.5 py-1 bg-red-950/60 text-red-400 rounded-lg font-bold">حذف</button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* 6. CONTEST & STICKERS TAB */}
-                        {activeTab === 'contest' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
-                                <div className="max-w-7xl mx-auto space-y-5">
-                                    <div className="bg-gradient-to-l from-[#3d090e] to-[#1E1E1E] p-5 rounded-2xl border border-amber-500/40 flex flex-wrap justify-between items-center gap-4 no-print">
-                                        <div>
-                                            <h2 className="text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
-                                                <i className="fa-solid fa-gift"></i> نظام مسابقة العلب والستيكرات الذكية ({SEED_CODE})
-                                            </h2>
-                                            <p className="text-xs text-gray-300 mt-1">
-                                                مرتبط بقاعدة البيانات السحابية | البطاقات المولدة: <strong className="text-white">{contestCards.length}</strong> | المستخدمة: <strong className="text-emerald-400">{Object.keys(contestRedeemed).length}</strong>
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            <button onClick={() => setContestSubTab('stickers')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'stickers' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
-                                                <i className="fa-solid fa-qrcode ml-1"></i> الستيكرات والطباعة
-                                            </button>
-                                            <button onClick={() => setContestSubTab('log')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'log' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
-                                                <i className="fa-solid fa-list-check ml-1"></i> سجل النتائج والقرعة
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {contestSubTab === 'stickers' && (
-                                        <div className="space-y-4">
-                                            <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] space-y-3 no-print">
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    <div>
-                                                        <label className="block text-xs font-bold text-gray-400 mb-1">رابط الاستضافة (GitHub Pages / الموقع):</label>
-                                                        <input type="text" value={contestBaseUrl} onChange={e => setContestBaseUrl(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-mono" dir="ltr" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-bold text-gray-400 mb-1">تصفية نوع الجائزة:</label>
-                                                        <select value={contestTypeFilter} onChange={e => { setContestTypeFilter(e.target.value); setContestPage(1); }} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
-                                                            <option value="all">جميع البطاقات ({contestCards.length})</option>
-                                                            <option value="1">ميني كيك مجاني (50)</option>
-                                                            <option value="2">السحب الشهري 250,000 دينار (400)</option>
-                                                            <option value="3">جوائز فورية أخرى (50)</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-end gap-2">
-                                                        <button onClick={handleGenerate500Cards} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2 px-3 rounded-xl text-xs">
-                                                            <i className="fa-solid fa-wand-magic-sparkles ml-1"></i> توليد 500 باركود
-                                                        </button>
-                                                        <button onClick={handleDeleteAllContestBarcodes} disabled={contestCards.length === 0} className="bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white font-black py-2 px-3 rounded-xl text-xs">
-                                                            <i className="fa-solid fa-trash-can ml-1"></i> حذف كل الباركود
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {contestCards.length > 0 && (
-                                                    <div className="flex flex-wrap items-center justify-between pt-3 border-t border-[#2D2D2D] gap-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <button onClick={() => window.print()} className="bg-amber-600 hover:bg-amber-500 text-white font-black px-4 py-2 rounded-xl text-xs">
-                                                                <i className="fa-solid fa-print ml-1"></i> طباعة الصفحة الحالية ({visibleContestCards.length} ستيكر)
+                                        {contestSubTab === 'stickers' && (
+                                            <div className="space-y-4">
+                                                <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] space-y-3">
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-gray-400 mb-1">رابط الاستضافة (GitHub Pages / الموقع):</label>
+                                                            <input type="text" value={contestBaseUrl} onChange={e => setContestBaseUrl(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-mono" dir="ltr" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-gray-400 mb-1">تصفية نوع الجائزة:</label>
+                                                            <select value={contestTypeFilter} onChange={e => { setContestTypeFilter(e.target.value); setContestPage(1); }} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
+                                                                <option value="all">جميع البطاقات ({contestCards.length})</option>
+                                                                <option value="1">ميني كيك مجاني (50)</option>
+                                                                <option value="2">السحب الشهري 250,000 دينار (400)</option>
+                                                                <option value="3">جوائز فورية أخرى (50)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-end gap-2">
+                                                            <button onClick={handleGenerate500Cards} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2 px-3 rounded-xl text-xs">
+                                                                <i className="fa-solid fa-wand-magic-sparkles ml-1"></i> توليد 500 باركود
                                                             </button>
-                                                            <button onClick={handlePrintAllStickers} className="bg-purple-600 hover:bg-purple-500 text-white font-black px-4 py-2 rounded-xl text-xs">
-                                                                <i className="fa-solid fa-layer-group ml-1"></i> طباعة كل البطاقات ({filteredContestCards.length})
-                                                            </button>
-                                                            <button onClick={handleExportContestExcel} className="bg-blue-600 hover:bg-blue-500 text-white font-black px-4 py-2 rounded-xl text-xs">
-                                                                <i className="fa-solid fa-file-excel ml-1"></i> تصدير Excel
+                                                            <button onClick={handleDeleteAllContestBarcodes} disabled={contestCards.length === 0} className="bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white font-black py-2 px-3 rounded-xl text-xs">
+                                                                <i className="fa-solid fa-trash-can ml-1"></i> حذف كل الباركود
                                                             </button>
                                                         </div>
+                                                    </div>
 
-                                                        <div className="flex items-center gap-2 bg-[#252525] px-3 py-1.5 rounded-xl border border-[#333]">
-                                                            <button disabled={contestPage <= 1} onClick={() => setContestPage(p => Math.max(1, p - 1))} className="px-2.5 py-1 bg-[#333] disabled:opacity-30 rounded-lg text-xs font-bold">السابق</button>
-                                                            <span className="text-xs font-black text-amber-400">صفحة {contestPage} من {totalContestPages}</span>
-                                                            <button disabled={contestPage >= totalContestPages} onClick={() => setContestPage(p => Math.min(totalContestPages, p + 1))} className="px-2.5 py-1 bg-[#333] disabled:opacity-30 rounded-lg text-xs font-bold">التالي</button>
+                                                    {contestCards.length > 0 && (
+                                                        <div className="flex flex-wrap items-center justify-between pt-3 border-t border-[#2D2D2D] gap-2">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <button onClick={() => triggerA6Print(visibleContestCards)} className="bg-amber-600 hover:bg-amber-500 text-white font-black px-4 py-2 rounded-xl text-xs">
+                                                                    <i className="fa-solid fa-print ml-1"></i> طباعة الصفحة الحالية A6 ({visibleContestCards.length})
+                                                                </button>
+                                                                <button onClick={() => triggerA6Print(filteredContestCards)} className="bg-purple-600 hover:bg-purple-500 text-white font-black px-4 py-2 rounded-xl text-xs">
+                                                                    <i className="fa-solid fa-layer-group ml-1"></i> طباعة كل الباركودات A6 ({filteredContestCards.length})
+                                                                </button>
+                                                                <button onClick={handleExportContestExcel} className="bg-blue-600 hover:bg-blue-500 text-white font-black px-4 py-2 rounded-xl text-xs">
+                                                                    <i className="fa-solid fa-file-excel ml-1"></i> تصدير Excel
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 bg-[#252525] px-3 py-1.5 rounded-xl border border-[#333]">
+                                                                <button disabled={contestPage <= 1} onClick={() => setContestPage(p => Math.max(1, p - 1))} className="px-2.5 py-1 bg-[#333] disabled:opacity-30 rounded-lg text-xs font-bold">السابق</button>
+                                                                <span className="text-xs font-black text-amber-400">صفحة {contestPage} من {totalContestPages}</span>
+                                                                <button disabled={contestPage >= totalContestPages} onClick={() => setContestPage(p => Math.min(totalContestPages, p + 1))} className="px-2.5 py-1 bg-[#333] disabled:opacity-30 rounded-lg text-xs font-bold">التالي</button>
+                                                            </div>
                                                         </div>
+                                                    )}
+                                                </div>
+
+                                                {contestCards.length === 0 ? (
+                                                    <div className="bg-[#1E1E1E] border border-[#2D2D2D] rounded-2xl p-12 text-center space-y-3">
+                                                        <i className="fa-solid fa-qrcode text-5xl text-gray-600"></i>
+                                                        <h3 className="text-base font-black text-gray-300">لا توجد باركودات مسابقة مولدة حالياً</h3>
+                                                        <p className="text-xs text-gray-500">اضغط على زر "توليد 500 باركود" لإنشاء دفعة جديدة وحفظها في قاعدة البيانات.</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                        {visibleContestCards.map(card => (
+                                                            <div key={card.code} className="flex flex-col gap-1.5">
+                                                                <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA6={false} />
+                                                                <div className="flex justify-between items-center bg-[#1E1E1E] px-2.5 py-1.5 rounded-lg border border-[#2D2D2D] text-[11px]">
+                                                                    <span className="text-gray-400 font-bold">#{card.seq}</span>
+                                                                    <span className={`px-2 py-0.5 rounded font-bold ${card.type === 1 ? 'bg-red-950 text-red-300' : card.type === 2 ? 'bg-amber-950 text-amber-300' : 'bg-emerald-950 text-emerald-300'}`}>
+                                                                        {card.label}
+                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button onClick={() => triggerA6Print([card])} className="text-amber-400 hover:underline font-bold">A6</button>
+                                                                        <a href={`?c=${card.code}`} target="_blank" className="text-blue-400 hover:underline font-bold">معاينة</a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>
+                                        )}
 
-                                            {contestCards.length === 0 ? (
-                                                <div className="bg-[#1E1E1E] border border-[#2D2D2D] rounded-2xl p-12 text-center space-y-3 no-print">
-                                                    <i className="fa-solid fa-qrcode text-5xl text-gray-600"></i>
-                                                    <h3 className="text-base font-black text-gray-300">لا توجد باركودات مسابقة مولدة حالياً</h3>
-                                                    <p className="text-xs text-gray-500">اضغط على زر "توليد 500 باركود" لإنشاء دفعة جديدة وحفظها في قاعدة البيانات.</p>
+                                        {contestSubTab === 'log' && (
+                                            <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D] space-y-4">
+                                                <div className="flex flex-wrap justify-between items-center gap-3">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <input type="text" placeholder="بحث برمز البطاقة MUH-..." value={contestSearchCode} onChange={e => setContestSearchCode(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold" />
+                                                        <select value={contestStatusFilter} onChange={e => setContestStatusFilter(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
+                                                            <option value="all">جميع البطاقات ({contestCards.length})</option>
+                                                            <option value="used">المستخدمة فقط ({Object.keys(contestRedeemed).length})</option>
+                                                            <option value="available">المتاحة فقط ({contestCards.length - Object.keys(contestRedeemed).length})</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={handleExportContestExcel} className="bg-blue-600 text-white font-black px-4 py-2 rounded-xl text-xs">تصدير Excel</button>
+                                                        <button onClick={handleDeleteAllContestBarcodes} className="bg-red-700 text-white font-black px-4 py-2 rounded-xl text-xs">حذف كل الباركود</button>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stickers-print-grid">
-                                                    {visibleContestCards.map(card => (
-                                                        <div key={card.code} className="sticker-print-item flex flex-col gap-1.5">
-                                                            <div className="modern-sticker">
-                                                                <div>
-                                                                    <div className="bg-gradient-to-l from-[#5c1119] to-[#8d1a27] text-white rounded-lg p-1.5 text-center border border-[#e6be4c] mb-2">
-                                                                        <div className="font-black text-sm text-[#ffe28a]">حلويات الشهد خاتون</div>
-                                                                        <div className="text-[10px] font-bold text-[#fff6e5]">مسابقة وعروض العلب المميزة</div>
-                                                                    </div>
 
-                                                                    <div className="grid grid-cols-3 gap-1 mb-2">
-                                                                        <div className="bg-white border border-[#e5c373] rounded-md p-1 text-center text-[9px] font-extrabold text-[#5c1119]">
-                                                                            عرض خاص<strong className="block text-[10px] text-[#9e1524]">ميني كيك</strong>
-                                                                        </div>
-                                                                        <div className="bg-white border border-[#e5c373] rounded-md p-1 text-center text-[9px] font-extrabold text-[#5c1119]">
-                                                                            اربح جائزة<strong className="block text-[10px] text-[#9e1524]">250,000</strong>
-                                                                        </div>
-                                                                        <div className="bg-white border border-[#e5c373] rounded-md p-1 text-center text-[9px] font-extrabold text-[#5c1119]">
-                                                                            فرصة فورية<strong className="block text-[10px] text-[#9e1524]">جوائز أخرى</strong>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center justify-between gap-2 bg-white border border-dashed border-[#c79b3b] rounded-xl p-2 mb-1.5">
-                                                                        <div className="flex-1 text-right">
-                                                                            <div className="text-[11px] font-black text-[#5c1119] mb-1">امسح الباركود واكتشف نتيجتك</div>
-                                                                            <div className="text-[9px] font-bold text-gray-500">رقم البطاقة:</div>
-                                                                            <div className="mt-0.5 bg-[#fdf6e7] border border-[#d4af37] text-[#3d090e] font-black text-xs text-center py-0.5 px-1.5 rounded-md" dir="ltr">
-                                                                                {card.code}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="w-[88px] h-[88px] flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1 flex items-center justify-center">
-                                                                            <FastQRCode text={`${contestBaseUrl.trim()}?c=${card.code}`} size={78} />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="font-amiri italic text-[10px] font-bold text-[#6b4c35] border-t border-dashed border-[#e2c588] pt-1 flex justify-center items-center gap-1.5">
-                                                                    <span>مصمم التطبيق: مهند صباح</span>
-                                                                    <span className="text-[#c79b3b]">•</span>
-                                                                    <span className="font-cairo not-italic text-[9px] font-extrabold text-[#5c1119]" dir="ltr">07869991700</span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex justify-between items-center bg-[#1E1E1E] px-2.5 py-1.5 rounded-lg border border-[#2D2D2D] text-[11px] no-print">
-                                                                <span className="text-gray-400 font-bold">#{card.seq}</span>
-                                                                <span className={`px-2 py-0.5 rounded font-bold ${card.type === 1 ? 'bg-red-950 text-red-300' : card.type === 2 ? 'bg-amber-950 text-amber-300' : 'bg-emerald-950 text-emerald-300'}`}>
-                                                                    {card.label}
-                                                                </span>
-                                                                <a href={`?c=${card.code}`} target="_blank" className="text-blue-400 hover:underline font-bold">معاينة</a>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {contestSubTab === 'log' && (
-                                        <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D] space-y-4 no-print">
-                                            <div className="flex flex-wrap justify-between items-center gap-3">
-                                                <div className="flex flex-wrap gap-2">
-                                                    <input type="text" placeholder="بحث برمز البطاقة MUH-..." value={contestSearchCode} onChange={e => setContestSearchCode(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold" />
-                                                    <select value={contestStatusFilter} onChange={e => setContestStatusFilter(e.target.value)} className="bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white font-bold">
-                                                        <option value="all">جميع البطاقات ({contestCards.length})</option>
-                                                        <option value="used">المستخدمة فقط ({Object.keys(contestRedeemed).length})</option>
-                                                        <option value="available">المتاحة فقط ({contestCards.length - Object.keys(contestRedeemed).length})</option>
-                                                    </select>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={handleExportContestExcel} className="bg-blue-600 text-white font-black px-4 py-2 rounded-xl text-xs">تصدير Excel</button>
-                                                    <button onClick={handleDeleteAllContestBarcodes} className="bg-red-700 text-white font-black px-4 py-2 rounded-xl text-xs">حذف كل الباركود</button>
+                                                <div className="overflow-x-auto max-h-[500px]">
+                                                    <table className="w-full text-right text-xs">
+                                                        <thead className="sticky top-0 bg-[#252525] text-gray-300 font-black">
+                                                            <tr>
+                                                                <th className="p-3">#</th>
+                                                                <th className="p-3">رمز البطاقة</th>
+                                                                <th className="p-3">نوع الجائزة</th>
+                                                                <th className="p-3">الحالة</th>
+                                                                <th className="p-3">وقت التسجيل</th>
+                                                                <th className="p-3">إجراء</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-[#2D2D2D]">
+                                                            {filteredContestLogs.slice(0, 150).map(c => {
+                                                                const rec = contestRedeemed[c.code];
+                                                                return (
+                                                                    <tr key={c.code} className="hover:bg-[#222]">
+                                                                        <td className="p-3 text-gray-400">{c.seq}</td>
+                                                                        <td className="p-3 font-mono font-black text-amber-400" dir="ltr">{c.code}</td>
+                                                                        <td className="p-3 font-bold">{c.label}</td>
+                                                                        <td className="p-3">
+                                                                            {rec ? <span className="text-red-400 font-black">تم التسجيل سابقاً</span> : <span className="text-emerald-400 font-bold">متاحة</span>}
+                                                                        </td>
+                                                                        <td className="p-3 text-gray-400">{rec ? rec.claimedAt : '-'}</td>
+                                                                        <td className="p-3">
+                                                                            {rec ? (
+                                                                                <button onClick={() => handleUnlockContestCode(c.code)} className="px-2.5 py-1 bg-amber-950/70 text-amber-300 border border-amber-800 rounded-lg font-bold">إعادة إتاحة</button>
+                                                                            ) : '-'}
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
-                                            <div className="overflow-x-auto max-h-[500px]">
-                                                <table className="w-full text-right text-xs">
-                                                    <thead className="sticky top-0 bg-[#252525] text-gray-300 font-black">
-                                                        <tr>
-                                                            <th className="p-3">#</th>
-                                                            <th className="p-3">رمز البطاقة</th>
-                                                            <th className="p-3">نوع الجائزة</th>
-                                                            <th className="p-3">الحالة</th>
-                                                            <th className="p-3">وقت التسجيل</th>
-                                                            <th className="p-3">إجراء</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-[#2D2D2D]">
-                                                        {filteredContestLogs.slice(0, 150).map(c => {
-                                                            const rec = contestRedeemed[c.code];
-                                                            return (
-                                                                <tr key={c.code} className="hover:bg-[#222]">
-                                                                    <td className="p-3 text-gray-400">{c.seq}</td>
-                                                                    <td className="p-3 font-mono font-black text-amber-400" dir="ltr">{c.code}</td>
-                                                                    <td className="p-3 font-bold">{c.label}</td>
-                                                                    <td className="p-3">
-                                                                        {rec ? <span className="text-red-400 font-black">تم التسجيل سابقاً</span> : <span className="text-emerald-400 font-bold">متاحة</span>}
-                                                                    </td>
-                                                                    <td className="p-3 text-gray-400">{rec ? rec.claimedAt : '-'}</td>
-                                                                    <td className="p-3">
-                                                                        {rec ? (
-                                                                            <button onClick={() => handleUnlockContestCode(c.code)} className="px-2.5 py-1 bg-amber-950/70 text-amber-300 border border-amber-800 rounded-lg font-bold">إعادة إتاحة</button>
-                                                                        ) : '-'}
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
+                            {/* 7. REPORTS TAB */}
+                            {activeTab === 'reports' && (
+                                <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212]">
+                                    <div className="max-w-6xl mx-auto space-y-5">
+                                        <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D] grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 mb-1">من تاريخ:</label>
+                                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 mb-1">إلى تاريخ:</label>
+                                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 mb-1">بحث:</label>
+                                                <input type="text" placeholder="اسم المادة أو البيان..." value={reportProductSearch} onChange={e => setReportProductSearch(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
+                                            </div>
+                                            <div className="flex items-end">
+                                                <button onClick={() => { setStartDate(''); setEndDate(''); setReportProductSearch(''); }} className="w-full py-2 bg-[#2A2A2A] text-gray-300 font-bold rounded-xl text-xs">إعادة ضبط</button>
                                             </div>
                                         </div>
-                                    )}
+
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                            <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
+                                                <span className="text-xs text-gray-400 block">مبيعات الكاشير</span>
+                                                <div className="text-lg font-black text-pink-400">{reportStats.totalSales.toLocaleString()} د.ع</div>
+                                            </div>
+                                            <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
+                                                <span className="text-xs text-gray-400 block">مبيعات المعمل</span>
+                                                <div className="text-lg font-black text-cyan-400">{reportStats.factoryTotal.toLocaleString()} د.ع</div>
+                                            </div>
+                                            <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
+                                                <span className="text-xs text-gray-400 block">الصرفيات</span>
+                                                <div className="text-lg font-black text-red-400">{reportStats.totalExpenses.toLocaleString()} د.ع</div>
+                                            </div>
+                                            <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
+                                                <span className="text-xs text-gray-400 block">التكلفة</span>
+                                                <div className="text-lg font-black text-amber-400">{reportStats.totalCost.toLocaleString()} د.ع</div>
+                                            </div>
+                                            <div className="bg-emerald-950/30 p-4 rounded-2xl border border-emerald-700/50">
+                                                <span className="text-xs text-emerald-400 font-bold block">صافي الأرباح</span>
+                                                <div className="text-lg font-black text-emerald-400">+{reportStats.netProfit.toLocaleString()} د.ع</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* الشريط المتحرك السفلي */}
+                        <footer className="fixed bottom-0 left-0 right-0 bg-[#181818] border-t border-[#2D2D2D] text-pink-400 font-black text-xs py-1.5 overflow-hidden z-30">
+                            <div className="whitespace-nowrap overflow-hidden">
+                                <span className="animate-marquee inline-block">
+                                    مصمم التطبيق مهند صباح 07869991700 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; حلويات ومرطبات الشهد خاتون - نظام نقطة البيع والمسابقات المتكامل &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; مصمم التطبيق مهند صباح 07869991700
+                                </span>
+                            </div>
+                        </footer>
+
+                        {/* PIN MODAL */}
+                        {isPinModalOpen && (
+                            <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+                                <div className="bg-[#1E1E1E] rounded-3xl max-w-xs w-full p-6 space-y-4 border border-[#333] text-center">
+                                    <div className="w-12 h-12 rounded-full bg-pink-600/20 text-pink-500 flex items-center justify-center text-xl mx-auto">
+                                        <i className="fa-solid fa-lock"></i>
+                                    </div>
+                                    <h3 className="font-extrabold text-base text-white">أدخل الرمز السري</h3>
+                                    <form onSubmit={handlePinSubmit} className="space-y-3">
+                                        <input type="password" maxLength="10" value={enteredPin} onChange={e => { setEnteredPin(e.target.value); setPinError(false); }} placeholder="••••" className="w-full text-center tracking-widest text-lg font-bold py-2 bg-[#252525] border border-[#333] rounded-xl text-white" autoFocus />
+                                        {pinError && <p className="text-red-400 text-xs font-bold">الرمز السري غير صحيح!</p>}
+                                        <div className="flex gap-2">
+                                            <button type="submit" className="flex-1 bg-pink-600 text-white font-bold py-2 rounded-xl text-xs">دخول</button>
+                                            <button type="button" onClick={() => setIsPinModalOpen(false)} className="px-4 bg-[#2A2A2A] text-gray-300 font-bold py-2 rounded-xl text-xs">إلغاء</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         )}
 
-                        {/* 7. REPORTS TAB */}
-                        {activeTab === 'reports' && (
-                            <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-[#121212] no-print">
-                                <div className="max-w-6xl mx-auto space-y-5">
-                                    <div className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2D2D2D] grid grid-cols-1 sm:grid-cols-4 gap-3">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-400 mb-1">من تاريخ:</label>
-                                            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-400 mb-1">إلى تاريخ:</label>
-                                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-400 mb-1">بحث:</label>
-                                            <input type="text" placeholder="اسم المادة أو البيان..." value={reportProductSearch} onChange={e => setReportProductSearch(e.target.value)} className="w-full bg-[#252525] border border-[#333] rounded-xl px-3 py-2 text-xs text-white" />
-                                        </div>
-                                        <div className="flex items-end">
-                                            <button onClick={() => { setStartDate(''); setEndDate(''); setReportProductSearch(''); }} className="w-full py-2 bg-[#2A2A2A] text-gray-300 font-bold rounded-xl text-xs">إعادة ضبط</button>
-                                        </div>
+                        {/* INVOICE MODAL */}
+                        {currentInvoice && (
+                            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3">
+                                <div className="bg-white text-gray-900 rounded-3xl max-w-sm w-full p-6 space-y-3 shadow-2xl relative">
+                                    <button onClick={() => setCurrentInvoice(null)} className="absolute top-3 left-3 text-gray-400 text-lg"><i className="fa-solid fa-xmark"></i></button>
+                                    <div className="text-center pb-2 border-b border-dashed border-gray-300">
+                                        <h3 className="font-black text-base">حلويات ومرطبات الشهد خاتون</h3>
+                                        <p className="text-xs text-gray-500 font-bold">فاتورة مبيعات نقدية ({currentInvoice.id})</p>
                                     </div>
-
-                                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                        <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
-                                            <span className="text-xs text-gray-400 block">مبيعات الكاشير</span>
-                                            <div className="text-lg font-black text-pink-400">{reportStats.totalSales.toLocaleString()} د.ع</div>
-                                        </div>
-                                        <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
-                                            <span className="text-xs text-gray-400 block">مبيعات المعمل</span>
-                                            <div className="text-lg font-black text-cyan-400">{reportStats.factoryTotal.toLocaleString()} د.ع</div>
-                                        </div>
-                                        <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
-                                            <span className="text-xs text-gray-400 block">الصرفيات</span>
-                                            <div className="text-lg font-black text-red-400">{reportStats.totalExpenses.toLocaleString()} د.ع</div>
-                                        </div>
-                                        <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D]">
-                                            <span className="text-xs text-gray-400 block">التكلفة</span>
-                                            <div className="text-lg font-black text-amber-400">{reportStats.totalCost.toLocaleString()} د.ع</div>
-                                        </div>
-                                        <div className="bg-emerald-950/30 p-4 rounded-2xl border border-emerald-700/50">
-                                            <span className="text-xs text-emerald-400 font-bold block">صافي الأرباح</span>
-                                            <div className="text-lg font-black text-emerald-400">+{reportStats.netProfit.toLocaleString()} د.ع</div>
-                                        </div>
+                                    <div className="space-y-1.5 text-xs border-b border-dashed border-gray-300 pb-2">
+                                        {currentInvoice.items.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between">
+                                                <span className="font-bold">{item.name} ({item.quantity})</span>
+                                                <span className="font-black">{item.itemTotal.toLocaleString()} د.ع</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-between font-black text-sm">
+                                        <span>المجمع الكلي:</span>
+                                        <span className="text-pink-600">{currentInvoice.total.toLocaleString()} د.ع</span>
+                                    </div>
+                                    <div className="flex justify-center pt-1">
+                                        <FastQRCode text={`Order: ${currentInvoice.id} | Total: ${currentInvoice.total}`} size={80} />
+                                    </div>
+                                    <div className="text-center text-[10px] font-bold text-gray-500">مصمم التطبيق مهند صباح 07869991700</div>
+                                    <div className="flex gap-2 pt-2">
+                                        <button onClick={() => window.print()} className="flex-1 bg-pink-600 text-white font-black py-2 rounded-xl text-xs">طباعة الفاتورة</button>
+                                        <button onClick={() => setCurrentInvoice(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs">إغلاق</button>
                                     </div>
                                 </div>
                             </div>
                         )}
+
+                        {/* BARCODE PRINT MODAL (INVENTORY) */}
+                        {barcodeModalProduct && (
+                            <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3">
+                                <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 space-y-4">
+                                    <div className="flex justify-between items-center border-b pb-2">
+                                        <h3 className="font-black text-sm">طباعة باركود المنتجات</h3>
+                                        <button onClick={() => setBarcodeModalProduct(null)} className="text-gray-500"><i className="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                    <div className="max-h-72 overflow-y-auto space-y-2">
+                                        {(barcodeModalProduct === 'ALL' ? products : [barcodeModalProduct]).map(p => (
+                                            <div key={p.id} className="p-3 border border-dashed border-gray-400 rounded-xl text-center">
+                                                <div className="font-black text-xs">{p.name} - {p.price.toLocaleString()} د.ع</div>
+                                                <div className="font-mono text-xs font-bold text-gray-700">{p.barcode}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => window.print()} className="flex-1 bg-purple-600 text-white font-black py-2.5 rounded-xl text-xs">طباعة</button>
+                                        <button onClick={() => setBarcodeModalProduct(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs">إغلاق</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CATEGORY & PRODUCT MODALS */}
+                        {isCategoryModalOpen && <CategoryFormModal category={editingCategory} onClose={() => setIsCategoryModalOpen(false)} onSave={handleSaveCategory} />}
+                        {isProductModalOpen && <ProductFormModal product={editingProduct} categories={categories} onClose={() => setIsProductModalOpen(false)} onSave={handleSaveProduct} />}
                     </div>
 
-                    {/* الشريط المتحرك السفلي */}
-                    <footer className="fixed bottom-0 left-0 right-0 bg-[#181818] border-t border-[#2D2D2D] text-pink-400 font-black text-xs py-1.5 overflow-hidden z-30 no-print">
-                        <div className="whitespace-nowrap overflow-hidden">
-                            <span className="animate-marquee inline-block">
-                                مصمم التطبيق مهند صباح 07869991700 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; حلويات ومرطبات الشهد خاتون - نظام نقطة البيع والمسابقات المتكامل &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; مصمم التطبيق مهند صباح 07869991700
-                            </span>
-                        </div>
-                    </footer>
-
-                    {/* PIN MODAL */}
-                    {isPinModalOpen && (
-                        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3 no-print">
-                            <div className="bg-[#1E1E1E] rounded-3xl max-w-xs w-full p-6 space-y-4 border border-[#333] text-center">
-                                <div className="w-12 h-12 rounded-full bg-pink-600/20 text-pink-500 flex items-center justify-center text-xl mx-auto">
-                                    <i className="fa-solid fa-lock"></i>
+                    {/* حاوية طباعة A6 المخصصة (تملأ كامل الورقة بدون فراغ أو صفحات فارغة) */}
+                    {printCardsQueue.length > 0 && (
+                        <div className="stickers-a6-print-only">
+                            {printCardsQueue.map(card => (
+                                <div key={`print-a6-${card.code}`} className="a6-sticker-page">
+                                    <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA6={true} />
                                 </div>
-                                <h3 className="font-extrabold text-base text-white">أدخل الرمز السري</h3>
-                                <form onSubmit={handlePinSubmit} className="space-y-3">
-                                    <input type="password" maxLength="10" value={enteredPin} onChange={e => { setEnteredPin(e.target.value); setPinError(false); }} placeholder="••••" className="w-full text-center tracking-widest text-lg font-bold py-2 bg-[#252525] border border-[#333] rounded-xl text-white" autoFocus />
-                                    {pinError && <p className="text-red-400 text-xs font-bold">الرمز السري غير صحيح!</p>}
-                                    <div className="flex gap-2">
-                                        <button type="submit" className="flex-1 bg-pink-600 text-white font-bold py-2 rounded-xl text-xs">دخول</button>
-                                        <button type="button" onClick={() => setIsPinModalOpen(false)} className="px-4 bg-[#2A2A2A] text-gray-300 font-bold py-2 rounded-xl text-xs">إلغاء</button>
-                                    </div>
-                                </form>
-                            </div>
+                            ))}
                         </div>
                     )}
-
-                    {/* INVOICE MODAL */}
-                    {currentInvoice && (
-                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 printable-invoice">
-                            <div className="bg-white text-gray-900 rounded-3xl max-w-sm w-full p-6 space-y-3 shadow-2xl relative">
-                                <button onClick={() => setCurrentInvoice(null)} className="no-print absolute top-3 left-3 text-gray-400 text-lg"><i className="fa-solid fa-xmark"></i></button>
-                                <div className="text-center pb-2 border-b border-dashed border-gray-300">
-                                    <h3 className="font-black text-base">حلويات ومرطبات الشهد خاتون</h3>
-                                    <p className="text-xs text-gray-500 font-bold">فاتورة مبيعات نقدية ({currentInvoice.id})</p>
-                                </div>
-                                <div className="space-y-1.5 text-xs border-b border-dashed border-gray-300 pb-2">
-                                    {currentInvoice.items.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between">
-                                            <span className="font-bold">{item.name} ({item.quantity})</span>
-                                            <span className="font-black">{item.itemTotal.toLocaleString()} د.ع</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex justify-between font-black text-sm">
-                                    <span>المجمع الكلي:</span>
-                                    <span className="text-pink-600">{currentInvoice.total.toLocaleString()} د.ع</span>
-                                </div>
-                                <div className="flex justify-center pt-1">
-                                    <FastQRCode text={`Order: ${currentInvoice.id} | Total: ${currentInvoice.total}`} size={80} />
-                                </div>
-                                <div className="text-center text-[10px] font-bold text-gray-500">مصمم التطبيق مهند صباح 07869991700</div>
-                                <div className="no-print flex gap-2 pt-2">
-                                    <button onClick={() => window.print()} className="flex-1 bg-pink-600 text-white font-black py-2 rounded-xl text-xs">طباعة الفاتورة</button>
-                                    <button onClick={() => setCurrentInvoice(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs">إغلاق</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* BARCODE PRINT MODAL (INVENTORY) */}
-                    {barcodeModalProduct && (
-                        <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3">
-                            <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 space-y-4">
-                                <div className="flex justify-between items-center border-b pb-2">
-                                    <h3 className="font-black text-sm">طباعة باركود المنتجات</h3>
-                                    <button onClick={() => setBarcodeModalProduct(null)} className="no-print text-gray-500"><i className="fa-solid fa-xmark"></i></button>
-                                </div>
-                                <div className="max-h-72 overflow-y-auto space-y-2">
-                                    {(barcodeModalProduct === 'ALL' ? products : [barcodeModalProduct]).map(p => (
-                                        <div key={p.id} className="p-3 border border-dashed border-gray-400 rounded-xl text-center">
-                                            <div className="font-black text-xs">{p.name} - {p.price.toLocaleString()} د.ع</div>
-                                            <div className="font-mono text-xs font-bold text-gray-700">{p.barcode}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="no-print flex gap-2">
-                                    <button onClick={() => window.print()} className="flex-1 bg-purple-600 text-white font-black py-2.5 rounded-xl text-xs">طباعة</button>
-                                    <button onClick={() => setBarcodeModalProduct(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs">إغلاق</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* CATEGORY & PRODUCT MODALS */}
-                    {isCategoryModalOpen && <CategoryFormModal category={editingCategory} onClose={() => setIsCategoryModalOpen(false)} onSave={handleSaveCategory} />}
-                    {isProductModalOpen && <ProductFormModal product={editingProduct} categories={categories} onClose={() => setIsProductModalOpen(false)} onSave={handleSaveProduct} />}
-                </div>
+                </>
             );
         }
 
@@ -1534,7 +1605,7 @@
             const [type, setType] = useState(category ? (category.type || 'weight') : 'weight');
             const [color, setColor] = useState(category ? category.color : '#EC4899');
             return (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 no-print">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3">
                     <div className="bg-[#1E1E1E] rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#2D2D2D]">
                         <h3 className="font-black text-base text-white">{category ? 'تعديل القسم' : 'إضافة قسم جديد'}</h3>
                         <input type="text" placeholder="اسم القسم" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 bg-[#252525] border border-[#333] rounded-xl text-white text-xs font-bold" />
@@ -1563,7 +1634,7 @@
             const [image, setImage] = useState(product ? product.image : 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=300&auto=format&fit=crop&q=80');
 
             return (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 no-print">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3">
                     <div className="bg-[#1E1E1E] rounded-3xl max-w-md w-full p-6 space-y-3 border border-[#2D2D2D]">
                         <h3 className="font-black text-base text-white">{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
                         <input type="text" placeholder="اسم المنتج" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 bg-[#252525] border border-[#333] rounded-xl text-white text-xs font-bold" />
