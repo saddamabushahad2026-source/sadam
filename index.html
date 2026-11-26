@@ -95,8 +95,10 @@
             background: linear-gradient(90deg, #6b141e, #d4af37, #9e1b2b, #d4af37, #6b141e);
         }
 
-        /* شبكة الطباعة المخصصة لقياس A6 تبقى مخفية على الشاشة وتظهر فقط عند الطباعة */
-        .stickers-a6-print-only {
+        /* حاويات الطباعة المخفية على الشاشة */
+        .stickers-a4-print-only,
+        .invoice-a4-print-only,
+        .barcodes-a4-print-only {
             display: none;
         }
 
@@ -120,51 +122,69 @@
             font-size: 15px; font-weight: 800; direction: ltr;
         }
 
-        /* تنسيقات الطباعة بقياس A6 كامل 100% بدون أي فراغ أو صفحات فارغة */
+        /* ================= تنسيقات الطباعة بحجم A4 كامل ================= */
         @media print {
             @page {
-                size: A6 portrait;
+                size: A4 portrait;
                 margin: 0;
             }
             .no-print {
                 display: none !important;
             }
+
             html, body, #root {
-                width: 105mm !important;
+                width: 210mm !important;
+                background: #ffffff !important;
+                color: #000000 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background: #ffffff !important;
-                color: #111111 !important;
                 overflow: visible !important;
                 height: auto !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            /* طباعة الفاتورة */
-            .printable-invoice {
-                position: static !important;
-                width: 105mm !important;
-                height: 148mm !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: #ffffff !important;
-            }
-
-            /* إظهار شبكة ستيكرات A6 الكاملة فقط */
-            .stickers-a6-print-only {
+            /* 1. طباعة الوصولات (الفواتير) بحجم A4 */
+            .invoice-a4-print-only {
                 display: block !important;
-                width: 105mm !important;
+                width: 210mm !important;
+                min-height: 297mm !important;
+                padding: 12mm 15mm !important;
+                margin: 0 auto !important;
+                box-sizing: border-box !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            /* 2. طباعة باركود المخزون بحجم A4 */
+            .barcodes-a4-print-only {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 6mm !important;
+                width: 210mm !important;
+                padding: 10mm !important;
+                box-sizing: border-box !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            /* 3. طباعة كارتات المسابقة بحجم A4 كامل لكل كارت */
+            .stickers-a4-print-only {
+                display: block !important;
+                width: 210mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #ffffff !important;
             }
 
-            .a6-sticker-page {
-                width: 105mm !important;
-                height: 148mm !important;
+            .a4-sticker-page {
+                width: 210mm !important;
+                height: 297mm !important;
                 margin: 0 !important;
-                padding: 0 !important;
+                padding: 10mm !important;
                 box-sizing: border-box !important;
                 display: block !important;
+                background: #ffffff !important;
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
                 break-after: page !important;
@@ -172,31 +192,31 @@
                 overflow: hidden !important;
             }
 
-            /* منع إضافة ورقة فارغة بعد آخر بطاقة */
-            .a6-sticker-page:last-child {
+            .a4-sticker-page:last-child {
                 break-after: auto !important;
                 page-break-after: auto !important;
             }
 
-            /* ملء كامل مساحة ورقة A6 بدون أي فراغات */
-            .a6-sticker-page .modern-sticker {
-                width: 105mm !important;
-                height: 148mm !important;
-                min-height: 148mm !important;
-                max-height: 148mm !important;
-                border-radius: 0 !important;
-                border-width: 1.5mm !important;
-                padding: 5mm 4.5mm 4mm !important;
+            .a4-sticker-page .modern-sticker {
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 277mm !important;
+                max-height: 277mm !important;
+                border-radius: 18px !important;
+                border-width: 3mm !important;
+                padding: 12mm 10mm 8mm !important;
                 margin: 0 !important;
                 box-sizing: border-box !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: space-between !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
 
-            .a6-sticker-page .a6-fill-body {
+            .a4-sticker-page .modern-sticker::before {
+                height: 10px !important;
+            }
+
+            .a4-sticker-page .a4-fill-body {
                 flex: 1 1 auto !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -218,7 +238,7 @@
             return '629' + Math.floor(100000000 + Math.random() * 900000000).toString();
         };
 
-        // توليد 500 بطاقة مسابقة عشوائية (50 نوع 1، 400 نوع 2، 50 نوع 3)
+        // توليد 500 بطاقة مسابقة عشوائية
         function generateContestBatch() {
             let s = Number(SEED_CODE) % 2147483647;
             const rand = () => {
@@ -264,7 +284,7 @@
             'hot_drinks': { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: 'fa-mug-hot', color: '#D97706', type: 'piece' }
         };
 
-        // مكون QR خفيف وسريع بدون تجميد المتصفح
+        // مكون QR خفيف وسريع
         const FastQRCode = React.memo(({ text, size = 86 }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -283,55 +303,55 @@
             return <div ref={ref} className="flex items-center justify-center"></div>;
         });
 
-        // تصميم بطاقة الستيكر (يُستخدم في العرض والطباعة A6 كاملة المساحة)
-        const StickerCardContent = React.memo(({ card, baseUrl, isPrintA6 = false }) => {
+        // تصميم بطاقة الستيكر (تتكيف تلقائياً مع حجم A4 الكامل عند الطباعة)
+        const StickerCardContent = React.memo(({ card, baseUrl, isPrintA4 = false }) => {
             const cleanUrl = (baseUrl || '').trim();
             return (
                 <div className="modern-sticker">
-                    <div className={isPrintA6 ? 'a6-fill-body' : ''}>
-                        <div className={`bg-gradient-to-l from-[#5c1119] to-[#8d1a27] text-white rounded-xl text-center border-2 border-[#e6be4c] shadow-sm ${isPrintA6 ? 'p-4 mb-3' : 'p-1.5 mb-2'}`}>
-                            <div className={`font-black text-[#ffe28a] ${isPrintA6 ? 'text-2xl leading-snug' : 'text-sm'}`}>حلويات الشهد خاتون</div>
-                            <div className={`font-bold text-[#fff6e5] ${isPrintA6 ? 'text-sm mt-1' : 'text-[10px]'}`}>مسابقة وعروض العلب المميزة</div>
+                    <div className={isPrintA4 ? 'a4-fill-body' : ''}>
+                        <div className={`bg-gradient-to-l from-[#5c1119] to-[#8d1a27] text-white rounded-2xl text-center border-2 border-[#e6be4c] shadow-sm ${isPrintA4 ? 'p-8 mb-6 border-4' : 'p-1.5 mb-2'}`}>
+                            <div className={`font-black text-[#ffe28a] ${isPrintA4 ? 'text-5xl leading-tight' : 'text-sm'}`}>حلويات الشهد خاتون</div>
+                            <div className={`font-bold text-[#fff6e5] ${isPrintA4 ? 'text-2xl mt-3' : 'text-[10px]'}`}>مسابقة وعروض العلب المميزة</div>
                         </div>
 
-                        <div className={`grid grid-cols-3 gap-2 ${isPrintA6 ? 'mb-3' : 'mb-2'}`}>
-                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
-                                عرض خاص<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>ميني كيك</strong>
+                        <div className={`grid grid-cols-3 ${isPrintA4 ? 'gap-5 mb-6' : 'gap-2 mb-2'}`}>
+                            <div className={`bg-white border-2 border-[#e5c373] rounded-2xl text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA4 ? 'p-6 text-xl min-h-[140px]' : 'p-1 text-[9px]'}`}>
+                                عرض خاص<strong className={`block text-[#9e1524] ${isPrintA4 ? 'text-3xl mt-3' : 'text-[10px]'}`}>ميني كيك</strong>
                             </div>
-                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
-                                اربح جائزة<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>250,000</strong>
+                            <div className={`bg-white border-2 border-[#e5c373] rounded-2xl text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA4 ? 'p-6 text-xl min-h-[140px]' : 'p-1 text-[9px]'}`}>
+                                اربح جائزة<strong className={`block text-[#9e1524] ${isPrintA4 ? 'text-3xl mt-3' : 'text-[10px]'}`}>250,000</strong>
                             </div>
-                            <div className={`bg-white border border-[#e5c373] rounded-lg text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA6 ? 'p-2.5 text-xs min-h-[68px]' : 'p-1 text-[9px]'}`}>
-                                فرصة فورية<strong className={`block text-[#9e1524] ${isPrintA6 ? 'text-base mt-1' : 'text-[10px]'}`}>جوائز أخرى</strong>
+                            <div className={`bg-white border-2 border-[#e5c373] rounded-2xl text-center font-extrabold text-[#5c1119] flex flex-col justify-center ${isPrintA4 ? 'p-6 text-xl min-h-[140px]' : 'p-1 text-[9px]'}`}>
+                                فرصة فورية<strong className={`block text-[#9e1524] ${isPrintA4 ? 'text-3xl mt-3' : 'text-[10px]'}`}>جوائز أخرى</strong>
                             </div>
                         </div>
 
-                        <div className={`flex items-center justify-between gap-3 bg-white border-2 border-dashed border-[#c79b3b] rounded-2xl ${isPrintA6 ? 'p-4 mb-3 flex-1' : 'p-2 mb-1.5'}`}>
+                        <div className={`flex items-center justify-between bg-white border-2 border-dashed border-[#c79b3b] rounded-3xl ${isPrintA4 ? 'p-8 mb-6 flex-1 gap-8 border-4' : 'p-2 mb-1.5 gap-3'}`}>
                             <div className="flex-1 text-right">
-                                <div className={`font-black text-[#5c1119] mb-1.5 ${isPrintA6 ? 'text-base' : 'text-[11px]'}`}>امسح الباركود واكتشف نتيجتك</div>
-                                <div className={`font-bold text-gray-500 ${isPrintA6 ? 'text-xs' : 'text-[9px]'}`}>رقم البطاقة:</div>
-                                <div className={`mt-1.5 bg-[#fdf6e7] border border-[#d4af37] text-[#3d090e] font-black text-center rounded-lg ${isPrintA6 ? 'text-xl py-2 px-2.5 tracking-wider' : 'text-xs py-0.5 px-1.5'}`} dir="ltr">
+                                <div className={`font-black text-[#5c1119] ${isPrintA4 ? 'text-3xl mb-4 leading-snug' : 'text-[11px] mb-1.5'}`}>امسح الباركود واكتشف نتيجتك</div>
+                                <div className={`font-bold text-gray-600 ${isPrintA4 ? 'text-xl' : 'text-[9px]'}`}>رقم البطاقة:</div>
+                                <div className={`bg-[#fdf6e7] border-2 border-[#d4af37] text-[#3d090e] font-black text-center rounded-2xl ${isPrintA4 ? 'text-4xl py-5 px-6 mt-3 tracking-widest' : 'text-xs py-0.5 px-1.5 mt-1.5'}`} dir="ltr">
                                     {card.code}
                                 </div>
                             </div>
-                            <div className={`${isPrintA6 ? 'w-[138px] h-[138px]' : 'w-[88px] h-[88px]'} flex-shrink-0 bg-white border border-gray-200 rounded-xl p-1.5 flex items-center justify-center`}>
-                                <FastQRCode text={`${cleanUrl}?c=${card.code}`} size={isPrintA6 ? 124 : 78} />
+                            <div className={`${isPrintA4 ? 'w-[240px] h-[240px] p-3 border-2' : 'w-[88px] h-[88px] p-1.5 border'} flex-shrink-0 bg-white border-gray-300 rounded-2xl flex items-center justify-center`}>
+                                <FastQRCode text={`${cleanUrl}?c=${card.code}`} size={isPrintA4 ? 215 : 78} />
                             </div>
                         </div>
                     </div>
 
-                    <div className={`font-amiri italic font-bold text-[#6b4c35] border-t border-dashed border-[#e2c588] pt-2 flex justify-center items-center gap-2 ${isPrintA6 ? 'text-sm' : 'text-[10px]'}`}>
+                    <div className={`font-amiri italic font-bold text-[#6b4c35] border-t-2 border-dashed border-[#e2c588] flex justify-center items-center ${isPrintA4 ? 'text-2xl pt-4 gap-4' : 'text-[10px] pt-2 gap-2'}`}>
                         <span>مصمم التطبيق: مهند صباح</span>
                         <span className="text-[#c79b3b]">•</span>
-                        <span className={`font-cairo not-italic font-extrabold text-[#5c1119] ${isPrintA6 ? 'text-sm' : 'text-[9px]'}`} dir="ltr">07869991700</span>
+                        <span className={`font-cairo not-italic font-extrabold text-[#5c1119] ${isPrintA4 ? 'text-2xl' : 'text-[9px]'}`} dir="ltr">07869991700</span>
                     </div>
                 </div>
             );
         });
 
-        // شاشة الزبون عند مسح الباركود من الهاتف (?c=MUH-XXXX)
+        // شاشة الزبون عند مسح الباركود
         function CustomerScanView({ codeParam }) {
-            const [status, setStatus] = useState('loading'); // loading, valid, used, invalid
+            const [status, setStatus] = useState('loading');
             const [cardData, setCardData] = useState(null);
             const [redeemRecord, setRedeemRecord] = useState(null);
             const [imgAttempt, setImgAttempt] = useState(0);
@@ -444,7 +464,6 @@
         }
 
         function App() {
-            // التحقق إذا كان الرابط هو مسح باركود زبون
             const urlParams = new URLSearchParams(window.location.search);
             const scannedCode = (urlParams.get('c') || urlParams.get('code') || '').trim().toUpperCase();
             if (scannedCode) {
@@ -457,17 +476,15 @@
             const [enteredPin, setEnteredPin] = useState('');
             const [pinError, setPinError] = useState(false);
 
-            // بيانات النظام الأساسي
             const [categories, setCategories] = useState(Object.values(INITIAL_CATEGORIES_OBJ));
             const [products, setProducts] = useState([]);
             const [orders, setOrders] = useState([]);
             const [factorySales, setFactorySales] = useState([]);
             const [expenses, setExpenses] = useState([]);
 
-            // بيانات نظام المسابقة والستيكرات (مرتبطة بـ Firebase)
             const [contestCards, setContestCards] = useState([]);
             const [contestRedeemed, setContestRedeemed] = useState({});
-            const [contestSubTab, setContestSubTab] = useState('stickers'); // stickers | log
+            const [contestSubTab, setContestSubTab] = useState('stickers');
             const [contestBaseUrl, setContestBaseUrl] = useState(window.location.href.split('?')[0]);
             const [contestTypeFilter, setContestTypeFilter] = useState('all');
             const [contestPage, setContestPage] = useState(1);
@@ -476,7 +493,6 @@
             const [printCardsQueue, setPrintCardsQueue] = useState([]);
             const ITEMS_PER_PAGE = 20;
 
-            // حالات نقطة البيع والمخزون والتقارير
             const [selectedCategory, setSelectedCategory] = useState('all');
             const [searchQuery, setSearchQuery] = useState('');
             const [scanInput, setScanInput] = useState('');
@@ -504,7 +520,6 @@
             const [editingCategory, setEditingCategory] = useState(null);
             const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
 
-            // الاتصال بـ Firebase Realtime Database
             useEffect(() => {
                 const initListeners = () => {
                     if (!window.firebaseDB) return;
@@ -562,7 +577,7 @@
                 }
             }, []);
 
-            // تنظيف قائمة الطباعة بعد انتهاء الطباعة
+            // تنظيف قائمة طباعة الكارتات بعد انتهاء الطباعة
             useEffect(() => {
                 const onAfterPrint = () => {
                     setPrintCardsQueue([]);
@@ -571,7 +586,23 @@
                 return () => window.removeEventListener('afterprint', onAfterPrint);
             }, []);
 
-            // التنقل بين التبويبات مع حماية الرمز السري
+            // طباعة الوصولات أو باركود المخزون بحجم A4
+            const triggerA4Print = () => {
+                setPrintCardsQueue([]);
+                setTimeout(() => {
+                    window.print();
+                }, 250);
+            };
+
+            // طباعة كارتات المسابقة بحجم A4 كامل لكل كارت
+            const triggerContestA4Print = (cardsList) => {
+                if (!cardsList || cardsList.length === 0) return;
+                setPrintCardsQueue(cardsList);
+                setTimeout(() => {
+                    window.print();
+                }, 400);
+            };
+
             const handleTabChangeRequest = (tabName) => {
                 if (tabName === 'pos' || tabName === 'factory' || tabName === 'expenses') {
                     setActiveTab(tabName);
@@ -670,15 +701,6 @@
                 return filteredContestCards.slice(start, start + ITEMS_PER_PAGE);
             }, [filteredContestCards, contestPage]);
 
-            // تشغيل طباعة A6 مباشرة بعد رسم البطاقات المطلوبة
-            const triggerA6Print = (cardsList) => {
-                if (!cardsList || cardsList.length === 0) return;
-                setPrintCardsQueue(cardsList);
-                setTimeout(() => {
-                    window.print();
-                }, 400);
-            };
-
             const filteredContestLogs = useMemo(() => {
                 return contestCards.filter(c => {
                     const isUsed = Boolean(contestRedeemed[c.code]);
@@ -768,7 +790,7 @@
                 const now = new Date();
                 const newOrder = {
                     id: `ORD-${Date.now().toString().slice(-4)}`,
-                    date: now.toLocaleString('ar-EG'),
+                    date: now.toLocaleString('ar-IQ'),
                     rawDate: now.toISOString().split('T')[0],
                     items: [...cart],
                     total: grandTotal,
@@ -810,7 +832,7 @@
                     id: `FAC-${Date.now().toString().slice(-4)}`,
                     productId: prod.id, productName: prod.name,
                     quantity: qty, price, total: qty * price,
-                    date: now.toLocaleString('ar-EG'),
+                    date: now.toLocaleString('ar-IQ'),
                     rawDate: now.toISOString().split('T')[0]
                 };
 
@@ -1073,7 +1095,7 @@
 
                                         <div className="p-3.5 bg-[#202020] border-t border-[#2D2D2D] space-y-2.5">
                                             <div className="flex justify-between items-center text-white bg-[#252525] p-3 rounded-xl border border-[#333]">
-                                                <span className="font-black text-sm">المجمع الكلي:</span>
+                                                <span className="font-black text-sm">المجموع الكلي:</span>
                                                 <span className="font-black text-xl text-pink-400">{grandTotal.toLocaleString()} <span className="text-xs">د.ع</span></span>
                                             </div>
                                             <button disabled={cart.length === 0} onClick={handleCheckoutOpenDrawer} className={`w-full py-3 rounded-xl font-black text-white text-sm shadow-lg flex items-center justify-center gap-2 ${cart.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 cursor-pointer' : 'bg-[#2A2A2A] text-gray-600 cursor-not-allowed'}`}>
@@ -1247,7 +1269,7 @@
                                         <div className="flex flex-wrap justify-between items-center bg-[#1E1E1E] p-4 rounded-2xl border border-[#2D2D2D] gap-3">
                                             <h2 className="text-base font-black text-white">إدارة المخزون والأسعار</h2>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setBarcodeModalProduct('ALL')} className="bg-purple-600 text-white font-black px-4 py-2 rounded-xl text-xs">طباعة باركود الكل</button>
+                                                <button onClick={() => setBarcodeModalProduct('ALL')} className="bg-purple-600 text-white font-black px-4 py-2 rounded-xl text-xs">طباعة باركود الكل (A4)</button>
                                                 <button onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }} className="bg-pink-600 text-white font-black px-4 py-2 rounded-xl text-xs">+ إضافة منتج</button>
                                             </div>
                                         </div>
@@ -1294,7 +1316,7 @@
                                         <div className="bg-gradient-to-l from-[#3d090e] to-[#1E1E1E] p-5 rounded-2xl border border-amber-500/40 flex flex-wrap justify-between items-center gap-4">
                                             <div>
                                                 <h2 className="text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
-                                                    <i className="fa-solid fa-gift"></i> نظام مسابقة العلب والستيكرات الذكية ({SEED_CODE}) - قياس A6 كامل
+                                                    <i className="fa-solid fa-gift"></i> نظام مسابقة العلب والستيكرات الذكية ({SEED_CODE}) - طباعة بحجم A4
                                                 </h2>
                                                 <p className="text-xs text-gray-300 mt-1">
                                                     مرتبط بقاعدة البيانات السحابية | البطاقات المولدة: <strong className="text-white">{contestCards.length}</strong> | المستخدمة: <strong className="text-emerald-400">{Object.keys(contestRedeemed).length}</strong>
@@ -1302,7 +1324,7 @@
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 <button onClick={() => setContestSubTab('stickers')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'stickers' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
-                                                    <i className="fa-solid fa-qrcode ml-1"></i> الستيكرات والطباعة
+                                                    <i className="fa-solid fa-qrcode ml-1"></i> الكارتات والطباعة (A4)
                                                 </button>
                                                 <button onClick={() => setContestSubTab('log')} className={`px-4 py-2 rounded-xl text-xs font-black ${contestSubTab === 'log' ? 'bg-amber-500 text-black' : 'bg-[#252525] text-gray-200'}`}>
                                                     <i className="fa-solid fa-list-check ml-1"></i> سجل النتائج والقرعة
@@ -1340,11 +1362,11 @@
                                                     {contestCards.length > 0 && (
                                                         <div className="flex flex-wrap items-center justify-between pt-3 border-t border-[#2D2D2D] gap-2">
                                                             <div className="flex flex-wrap items-center gap-2">
-                                                                <button onClick={() => triggerA6Print(visibleContestCards)} className="bg-amber-600 hover:bg-amber-500 text-white font-black px-4 py-2 rounded-xl text-xs">
-                                                                    <i className="fa-solid fa-print ml-1"></i> طباعة الصفحة الحالية A6 ({visibleContestCards.length})
+                                                                <button onClick={() => triggerContestA4Print(visibleContestCards)} className="bg-amber-600 hover:bg-amber-500 text-white font-black px-4 py-2 rounded-xl text-xs">
+                                                                    <i className="fa-solid fa-print ml-1"></i> طباعة الصفحة الحالية A4 ({visibleContestCards.length})
                                                                 </button>
-                                                                <button onClick={() => triggerA6Print(filteredContestCards)} className="bg-purple-600 hover:bg-purple-500 text-white font-black px-4 py-2 rounded-xl text-xs">
-                                                                    <i className="fa-solid fa-layer-group ml-1"></i> طباعة كل الباركودات A6 ({filteredContestCards.length})
+                                                                <button onClick={() => triggerContestA4Print(filteredContestCards)} className="bg-purple-600 hover:bg-purple-500 text-white font-black px-4 py-2 rounded-xl text-xs">
+                                                                    <i className="fa-solid fa-layer-group ml-1"></i> طباعة كل الكارتات A4 ({filteredContestCards.length})
                                                                 </button>
                                                                 <button onClick={handleExportContestExcel} className="bg-blue-600 hover:bg-blue-500 text-white font-black px-4 py-2 rounded-xl text-xs">
                                                                     <i className="fa-solid fa-file-excel ml-1"></i> تصدير Excel
@@ -1370,14 +1392,14 @@
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         {visibleContestCards.map(card => (
                                                             <div key={card.code} className="flex flex-col gap-1.5">
-                                                                <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA6={false} />
+                                                                <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA4={false} />
                                                                 <div className="flex justify-between items-center bg-[#1E1E1E] px-2.5 py-1.5 rounded-lg border border-[#2D2D2D] text-[11px]">
                                                                     <span className="text-gray-400 font-bold">#{card.seq}</span>
                                                                     <span className={`px-2 py-0.5 rounded font-bold ${card.type === 1 ? 'bg-red-950 text-red-300' : card.type === 2 ? 'bg-amber-950 text-amber-300' : 'bg-emerald-950 text-emerald-300'}`}>
                                                                         {card.label}
                                                                     </span>
                                                                     <div className="flex items-center gap-2">
-                                                                        <button onClick={() => triggerA6Print([card])} className="text-amber-400 hover:underline font-bold">A6</button>
+                                                                        <button onClick={() => triggerContestA4Print([card])} className="text-amber-400 hover:underline font-bold">طباعة A4</button>
                                                                         <a href={`?c=${card.code}`} target="_blank" className="text-blue-400 hover:underline font-bold">معاينة</a>
                                                                     </div>
                                                                 </div>
@@ -1524,16 +1546,16 @@
                             </div>
                         )}
 
-                        {/* INVOICE MODAL */}
+                        {/* INVOICE MODAL (ON SCREEN) */}
                         {currentInvoice && (
                             <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3">
-                                <div className="bg-white text-gray-900 rounded-3xl max-w-sm w-full p-6 space-y-3 shadow-2xl relative">
+                                <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 space-y-3 shadow-2xl relative">
                                     <button onClick={() => setCurrentInvoice(null)} className="absolute top-3 left-3 text-gray-400 text-lg"><i className="fa-solid fa-xmark"></i></button>
                                     <div className="text-center pb-2 border-b border-dashed border-gray-300">
                                         <h3 className="font-black text-base">حلويات ومرطبات الشهد خاتون</h3>
-                                        <p className="text-xs text-gray-500 font-bold">فاتورة مبيعات نقدية ({currentInvoice.id})</p>
+                                        <p className="text-xs text-gray-500 font-bold">فاتورة مبيعات نقدية ({currentInvoice.id}) - {currentInvoice.date}</p>
                                     </div>
-                                    <div className="space-y-1.5 text-xs border-b border-dashed border-gray-300 pb-2">
+                                    <div className="space-y-1.5 text-xs border-b border-dashed border-gray-300 pb-2 max-h-60 overflow-y-auto">
                                         {currentInvoice.items.map((item, idx) => (
                                             <div key={idx} className="flex justify-between">
                                                 <span className="font-bold">{item.name} ({item.quantity})</span>
@@ -1542,7 +1564,7 @@
                                         ))}
                                     </div>
                                     <div className="flex justify-between font-black text-sm">
-                                        <span>المجمع الكلي:</span>
+                                        <span>المجموع الكلي:</span>
                                         <span className="text-pink-600">{currentInvoice.total.toLocaleString()} د.ع</span>
                                     </div>
                                     <div className="flex justify-center pt-1">
@@ -1550,8 +1572,10 @@
                                     </div>
                                     <div className="text-center text-[10px] font-bold text-gray-500">مصمم التطبيق مهند صباح 07869991700</div>
                                     <div className="flex gap-2 pt-2">
-                                        <button onClick={() => window.print()} className="flex-1 bg-pink-600 text-white font-black py-2 rounded-xl text-xs">طباعة الفاتورة</button>
-                                        <button onClick={() => setCurrentInvoice(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs">إغلاق</button>
+                                        <button onClick={triggerA4Print} className="flex-1 bg-pink-600 hover:bg-pink-500 text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                                            <i className="fa-solid fa-print"></i> طباعة الوصل (A4)
+                                        </button>
+                                        <button onClick={() => setCurrentInvoice(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs">إغلاق</button>
                                     </div>
                                 </div>
                             </div>
@@ -1562,7 +1586,7 @@
                             <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3">
                                 <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 space-y-4">
                                     <div className="flex justify-between items-center border-b pb-2">
-                                        <h3 className="font-black text-sm">طباعة باركود المنتجات</h3>
+                                        <h3 className="font-black text-sm">طباعة باركود المنتجات (A4)</h3>
                                         <button onClick={() => setBarcodeModalProduct(null)} className="text-gray-500"><i className="fa-solid fa-xmark"></i></button>
                                     </div>
                                     <div className="max-h-72 overflow-y-auto space-y-2">
@@ -1574,7 +1598,7 @@
                                         ))}
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => window.print()} className="flex-1 bg-purple-600 text-white font-black py-2.5 rounded-xl text-xs">طباعة</button>
+                                        <button onClick={triggerA4Print} className="flex-1 bg-purple-600 text-white font-black py-2.5 rounded-xl text-xs">طباعة (A4)</button>
                                         <button onClick={() => setBarcodeModalProduct(null)} className="px-4 bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs">إغلاق</button>
                                     </div>
                                 </div>
@@ -1586,12 +1610,105 @@
                         {isProductModalOpen && <ProductFormModal product={editingProduct} categories={categories} onClose={() => setIsProductModalOpen(false)} onSave={handleSaveProduct} />}
                     </div>
 
-                    {/* حاوية طباعة A6 المخصصة (تملأ كامل الورقة بدون فراغ أو صفحات فارغة) */}
+                    {/* 1. قالب طباعة الوصل (الفاتورة) بحجم A4 كامل */}
+                    {currentInvoice && printCardsQueue.length === 0 && (
+                        <div className="invoice-a4-print-only">
+                            <div className="border-2 border-black rounded-2xl p-6 flex flex-col justify-between min-h-[268mm] bg-white text-black">
+                                <div>
+                                    <div className="flex justify-between items-center border-b-2 border-black pb-4 mb-5">
+                                        <div>
+                                            <h1 className="text-3xl font-black text-black">حلويات ومرطبات الشهد خاتون</h1>
+                                            <p className="text-sm font-bold text-gray-700 mt-1">كربلاء المقدسة - وصل مبيعات نقدية</p>
+                                        </div>
+                                        <div className="text-left border-2 border-black rounded-xl px-4 py-2">
+                                            <div className="text-xs font-bold text-gray-600">رقم الوصل</div>
+                                            <div className="text-lg font-black" dir="ltr">{currentInvoice.id}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center bg-gray-100 border border-gray-400 rounded-xl px-4 py-2.5 mb-5 text-sm font-bold">
+                                        <span>التاريخ والوقت: {currentInvoice.date}</span>
+                                        <span>عدد الأصناف: {currentInvoice.items.length}</span>
+                                    </div>
+
+                                    <table className="w-full border-collapse border border-black text-right mb-6">
+                                        <thead>
+                                            <tr className="bg-gray-200 text-black font-black text-sm">
+                                                <th className="border border-black p-3 w-12 text-center">#</th>
+                                                <th className="border border-black p-3">اسم المادة</th>
+                                                <th className="border border-black p-3">التفاصيل / الوحدة</th>
+                                                <th className="border border-black p-3 text-center w-24">الكمية</th>
+                                                <th className="border border-black p-3 text-center w-32">سعر المفرد</th>
+                                                <th className="border border-black p-3 text-left w-36">المبلغ الإجمالي</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm font-bold">
+                                            {currentInvoice.items.map((item, idx) => (
+                                                <tr key={idx}>
+                                                    <td className="border border-black p-3 text-center">{idx + 1}</td>
+                                                    <td className="border border-black p-3 font-black">{item.name}</td>
+                                                    <td className="border border-black p-3 text-xs">{item.detailsLabel}</td>
+                                                    <td className="border border-black p-3 text-center">{item.quantity}</td>
+                                                    <td className="border border-black p-3 text-center">{(item.itemTotal / item.quantity).toLocaleString()} د.ع</td>
+                                                    <td className="border border-black p-3 text-left font-black">{item.itemTotal.toLocaleString()} د.ع</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center border-t-2 border-black pt-4 mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="border border-black p-1.5 rounded-lg">
+                                                <FastQRCode text={`Order: ${currentInvoice.id} | Total: ${currentInvoice.total} IQD | Date: ${currentInvoice.date}`} size={90} />
+                                            </div>
+                                            <div className="text-xs font-bold text-gray-700 space-y-1">
+                                                <div>شكراً لزيارتكم حلويات ومرطبات الشهد خاتون</div>
+                                                <div>يرجى الاحتفاظ بالوصل للمراجعة</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-2 border-black bg-gray-100 rounded-xl px-6 py-4 text-left min-w-[260px]">
+                                            <div className="text-sm font-bold text-gray-700">المبلغ الكلي المطلوب</div>
+                                            <div className="text-2xl font-black text-black mt-1">
+                                                {currentInvoice.total.toLocaleString()} <span className="text-base">دينار عراقي</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="border-t border-dashed border-gray-500 pt-3 flex justify-between items-center text-xs font-bold text-gray-700">
+                                        <span>مصمم التطبيق: مهند صباح - 07869991700</span>
+                                        <span>نظام الكاشير والمخزون المتكامل</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2. قالب طباعة باركود المخزون بحجم A4 */}
+                    {barcodeModalProduct && !currentInvoice && printCardsQueue.length === 0 && (
+                        <div className="barcodes-a4-print-only">
+                            {(barcodeModalProduct === 'ALL' ? products : [barcodeModalProduct]).map(p => (
+                                <div key={`print-bc-${p.id}`} className="border-2 border-black rounded-xl p-3 text-center flex flex-col items-center justify-center bg-white text-black" style={{ breakInside: 'avoid' }}>
+                                    <div className="font-black text-xs mb-1">حلويات الشهد خاتون</div>
+                                    <div className="font-extrabold text-sm mb-1">{p.name}</div>
+                                    <div className="my-1">
+                                        <FastQRCode text={String(p.barcode)} size={75} />
+                                    </div>
+                                    <div className="font-mono text-xs font-black mt-1" dir="ltr">{p.barcode}</div>
+                                    <div className="font-black text-sm mt-1 border-t border-gray-400 w-full pt-1">{p.price.toLocaleString()} د.ع</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* 3. حاوية طباعة A4 المخصصة لكارتات المسابقة */}
                     {printCardsQueue.length > 0 && (
-                        <div className="stickers-a6-print-only">
+                        <div className="stickers-a4-print-only">
                             {printCardsQueue.map(card => (
-                                <div key={`print-a6-${card.code}`} className="a6-sticker-page">
-                                    <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA6={true} />
+                                <div key={`print-a4-${card.code}`} className="a4-sticker-page">
+                                    <StickerCardContent card={card} baseUrl={contestBaseUrl} isPrintA4={true} />
                                 </div>
                             ))}
                         </div>
@@ -1667,4 +1784,3 @@
     </script>
 </body>
 </html>
-```[cite: 1]
